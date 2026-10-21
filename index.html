@@ -1,0 +1,611 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="color-scheme" content="light dark">
+  <link rel="icon" href="data:,">
+  <title>Macro Photography</title>
+  <meta name="description" content="Macro and nature photography, shot on iPhone in Fishers, Indiana.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:opsz,wght@6..96,500;6..96,600&family=Manrope:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      color-scheme:light dark;
+      --bg:#f0f0eb;--surface:#ffffff;--ink:#121411;--muted:#5d625a;--line:#cfd1c9;
+      --gold:#a56e00;--gold-bright:#c4860b;--hero-ink:#f7f3e9;--shade:rgba(7,9,7,.66);
+      --serif:"Bodoni Moda",Georgia,serif;--sans:"Manrope","Helvetica Neue",sans-serif;
+    }
+    @media(prefers-color-scheme:dark){
+      :root{--bg:#0d0f0e;--surface:#151815;--ink:#f2f0ea;--muted:#a9ada5;--line:#2c302c;--gold:#e8b93e;--gold-bright:#f2c653;--shade:rgba(4,6,4,.7)}
+    }
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth;background:var(--bg)}
+    body{margin:0;background:var(--bg);color:var(--ink);font:400 16px/1.6 var(--sans);overflow-x:hidden}
+    img{display:block;width:100%;height:100%;object-fit:cover}
+    a{color:inherit;text-decoration:none}
+    button{font:inherit}
+    .nav{position:absolute;z-index:10;inset:0 0 auto;display:flex;align-items:center;justify-content:space-between;padding:26px clamp(20px,5vw,72px);color:#fff}
+    .wordmark{display:grid;place-items:center;width:32px;height:32px;color:#fff}
+    .wordmark svg{display:block;width:24px;height:24px;overflow:visible}
+    .navlinks{display:flex;align-items:center;gap:clamp(18px,3vw,40px);font-size:12px;font-weight:600;letter-spacing:.1em;text-transform:uppercase}
+    .navlinks a{position:relative;padding:5px 0}.navlinks a::after{content:"";position:absolute;inset:auto 0 0;height:1px;background:var(--gold-bright);transform:scaleX(0);transform-origin:left;transition:transform .25s}.navlinks a:hover::after,.navlinks a:focus-visible::after{transform:scaleX(1)}
+    .hero{position:relative;min-height:min(940px,100svh);display:grid;align-items:end;isolation:isolate;background:#080b08}
+    .hero>img{position:absolute;inset:0;z-index:-2;object-position:center 54%}
+    .hero::after{content:"";position:absolute;z-index:-1;inset:0;background:linear-gradient(180deg,rgba(1,4,2,.35) 0%,rgba(1,4,2,.05) 32%,rgba(1,4,2,.2) 60%,rgba(1,4,2,.9) 100%)}
+    .photo-watermark{position:absolute;z-index:3;right:18px;bottom:16px;display:grid;gap:4px;padding:7px 10px;background:rgba(5,7,5,.64);color:#fff;font-size:clamp(12px,1.15vw,16px);font-weight:700;line-height:1;letter-spacing:.045em;text-shadow:0 1px 3px rgba(0,0,0,.9);pointer-events:none;user-select:none}
+    .photo-watermark strong,.photo-watermark small{font:inherit}.photo-watermark small{font-size:.78em;letter-spacing:.035em}
+    .hero>.photo-watermark{right:clamp(20px,4vw,58px);bottom:clamp(20px,4vw,54px);font-size:clamp(15px,1.55vw,21px)}
+    .hero-copy{width:min(1180px,100%);margin:0 auto;padding:0 clamp(20px,6vw,84px) clamp(54px,9vw,112px);color:var(--hero-ink)}
+    .kicker{margin:0 0 18px;color:var(--gold-bright);font-size:12px;font-weight:600;letter-spacing:.18em}
+    h1,h2,h3,p{margin-top:0}
+    h1{max-width:800px;margin-bottom:15px;font:500 clamp(44px,7.4vw,104px)/.98 var(--serif);letter-spacing:-.045em;text-wrap:balance}
+    .hero-note{display:flex;align-items:center;gap:12px;color:#d5d6cf;font-size:13px}.hero-note::before{content:"";width:44px;height:1px;background:var(--gold)}
+    main{display:block}
+    .section{width:min(1280px,100%);margin:auto;padding:clamp(76px,10vw,144px) clamp(20px,5vw,72px)}
+    .section-head{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:end;gap:24px;margin-bottom:40px;border-bottom:1px solid var(--line);padding-bottom:20px}
+    .section-label{margin:0 0 8px;color:var(--gold);font-size:12px;font-weight:600;letter-spacing:.16em;text-transform:uppercase}
+    h2{margin:0;font:500 clamp(36px,5vw,68px)/1.06 var(--serif);letter-spacing:-.035em}
+    .section-count{color:var(--muted);font-size:13px;white-space:nowrap}
+    .collection-grid{display:grid;grid-template-columns:repeat(12,1fr);gap:clamp(12px,2vw,28px)}
+    .collection{position:relative;overflow:hidden;min-height:530px;grid-column:span 6;background:var(--surface);cursor:pointer}
+    .collection:nth-child(2),.collection:nth-child(4){transform:translateY(46px)}
+    .collection img{transition:transform .7s cubic-bezier(.2,.8,.2,1),filter .5s}
+    .collection::after{content:"";position:absolute;inset:35% 0 0;background:linear-gradient(transparent,rgba(3,5,3,.8))}
+    .collection figcaption{position:absolute;z-index:1;inset:auto 26px 24px;color:#fff}
+    .collection h3{margin:0 0 2px;font:500 34px/1.1 var(--serif)}
+    .collection p{margin:0;color:#d9dbd5;font-size:13px}
+    .collection>.photo-watermark,.elite>.photo-watermark{top:16px;bottom:auto}
+    .collection:hover img,.collection:focus-within img{transform:scale(1.035);filter:saturate(1.05)}
+    .fungi-film-wrap{background:#080a08;color:#f2f0ea;border-top:1px solid #202420;border-bottom:1px solid #202420}
+    .fungi-film-wrap .section-head{border-color:#353a35}
+    .fungi-film{display:grid;grid-template-columns:minmax(260px,.8fr) minmax(280px,1.2fr);align-items:center;gap:clamp(42px,8vw,112px)}
+    .fungi-video-frame{position:relative;width:min(480px,100%);margin:auto;background:#030403}
+    .fungi-video-frame video{display:block;width:100%;height:auto;aspect-ratio:9/16;object-fit:cover;background:#030403}
+    .fungi-video-frame>.photo-watermark{top:16px;bottom:auto}
+    .fungi-copy{max-width:520px}
+    .fungi-copy h3{margin:0 0 20px;font:500 clamp(34px,4.5vw,58px)/1.08 var(--serif);letter-spacing:-.035em}
+    .fungi-caption{margin:0;color:#d6d8d1;font-size:clamp(17px,2vw,21px);line-height:1.6}
+    .fungi-duo{display:grid;grid-template-columns:1fr 1fr;gap:clamp(24px,4vw,48px);margin-top:clamp(52px,7vw,84px)}
+    .fungi-duo figure{margin:0}
+    .fungi-duo .fungi-video-frame{width:min(420px,100%)}
+    .fungi-duo figcaption{margin-top:16px;color:#d6d8d1;font-size:15px;text-align:center}
+    .elite-wrap{background:var(--surface)}
+    .elite-grid{display:grid;grid-template-columns:1.25fr .75fr;grid-template-rows:400px 310px 420px;gap:clamp(12px,2vw,24px)}
+    .elite{position:relative;overflow:hidden;background:#080a08}
+    .elite:first-child{grid-row:span 2}.elite:nth-child(4){grid-column:span 2}.elite img{transition:transform .6s ease}.elite:hover img{transform:scale(1.025)}
+    .elite .caption{position:absolute;z-index:1;left:18px;bottom:14px;margin:0;padding:5px 9px;background:rgba(6,8,6,.76);color:#fff;font-size:11px;letter-spacing:.04em}
+    .gallery-wrap{background:#080a08;color:#f2f0ea}
+    .gallery-wrap .section-head{border-color:#353a35}.gallery-wrap .section-count{color:#a9ada5}
+    .gallery-frame{position:relative;background:#050705}
+    .gallery-viewport{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scroll-behavior:smooth;scrollbar-width:none;overscroll-behavior-inline:contain;outline:none}
+    .gallery-viewport::-webkit-scrollbar{display:none}
+    .gallery-slide{position:relative;flex:0 0 100%;height:clamp(540px,68vw,820px);margin:0;scroll-snap-align:start;scroll-snap-stop:always;background:#050705}
+    .gallery-slide img{object-fit:contain}
+    .gallery-slide .photo-watermark{right:clamp(12px,2vw,22px);bottom:clamp(12px,2vw,20px)}
+    .gallery-slide .caption{position:absolute;z-index:1;left:18px;bottom:14px;margin:0;padding:5px 9px;background:rgba(6,8,6,.76);color:#fff;font-size:11px;letter-spacing:.04em}
+    .gallery-slide .caption em{color:#d5d8d1}
+    .gallery-arrow{position:absolute;z-index:5;top:50%;display:grid;place-items:center;width:46px;height:46px;border:1px solid rgba(255,255,255,.5);border-radius:50%;background:rgba(5,7,5,.72);color:#fff;cursor:pointer;transform:translateY(-50%);transition:background .2s,border-color .2s}
+    .gallery-arrow:hover,.gallery-arrow:focus-visible{border-color:var(--gold-bright);background:rgba(5,7,5,.92)}
+    .gallery-arrow svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.8}
+    .gallery-prev{left:16px}.gallery-next{right:16px}
+    .gallery-controls{display:flex;align-items:center;justify-content:space-between;gap:24px;margin-top:18px}
+    .gallery-status{min-width:76px;color:#d5d8d1;font-size:13px;font-variant-numeric:tabular-nums;letter-spacing:.08em}
+    .gallery-progress{flex:1;height:1px;background:#353a35}.gallery-progress span{display:block;width:calc(100% / var(--gallery-count,30));height:100%;background:var(--gold-bright);transform-origin:left center;transition:transform .25s ease}
+    .gallery-hint{color:#a9ada5;font-size:12px;letter-spacing:.04em}
+    .all-visible .gallery-frame{background:transparent}
+    .all-visible .gallery-viewport{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:clamp(10px,1.5vw,20px);overflow:visible;scroll-snap-type:none}
+    .all-visible .gallery-slide{height:auto;min-height:0;aspect-ratio:4/5;grid-column:span 4;scroll-snap-align:none}
+    .all-visible .gallery-slide:nth-child(1),.all-visible .gallery-slide:nth-child(6){grid-column:span 8;aspect-ratio:16/10}
+    .all-visible .gallery-slide img{object-fit:cover}
+    .all-visible .gallery-arrow,.all-visible .gallery-controls{display:none}
+    .recent-fungi-wrap{background:var(--surface)}
+    .recent-fungi-grid{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:clamp(10px,1.5vw,20px)}
+    .recent-fungi-photo{position:relative;overflow:hidden;min-height:0;margin:0;grid-column:span 4;aspect-ratio:4/5;background:#080a08}
+    .recent-fungi-photo:first-child{grid-column:span 8;aspect-ratio:16/10}
+    .recent-fungi-photo:nth-child(4),.recent-fungi-photo:nth-child(5){grid-column:span 6;aspect-ratio:5/6}
+    .recent-fungi-photo img{object-fit:cover}
+    .recent-fungi-photo .photo-watermark{right:12px;bottom:12px}
+    .about-wrap{background:#0d100e;color:#f2f0ea;border-top:1px solid #202420;border-bottom:1px solid #202420}
+    .portrait-about{width:min(900px,100%)}
+    .portrait-about .section-head{border-color:#353a35}
+    .about-photo{width:min(680px,100%);height:auto;margin:0 auto;object-fit:contain}
+    .about-bio{max-width:900px;margin:36px auto 0;color:#e5e3dc;font:500 clamp(25px,3.4vw,43px)/1.32 var(--serif);letter-spacing:-.025em;text-wrap:pretty}
+    .fieldnotes-wrap{background:var(--bg)}
+    .fieldnotes-lede{max-width:640px;color:var(--muted);font-size:clamp(16px,1.8vw,19px);line-height:1.65}
+    .fieldnotes-lede strong{color:var(--ink);font-weight:600}
+    .rule-list{list-style:none;margin:clamp(44px,6vw,72px) 0 0;padding:0;counter-reset:rule}
+    .rule{display:grid;grid-template-columns:96px minmax(0,1fr);gap:clamp(18px,4vw,56px);padding:30px 0;border-top:1px solid var(--line)}
+    .rule:last-child{border-bottom:1px solid var(--line)}
+    .rule-num{color:var(--gold);font:500 clamp(40px,5vw,64px)/1 var(--serif)}
+    .rule h3{margin:0 0 8px;font:500 clamp(23px,2.8vw,34px)/1.18 var(--serif);letter-spacing:-.02em}
+    .rule p{margin:0;max-width:680px;color:var(--muted);font-size:16px;line-height:1.65}
+    .fieldnotes-foot{margin-top:34px;display:flex;flex-wrap:wrap;align-items:baseline;gap:18px 34px}
+    .fieldnotes-date{margin:0;color:var(--muted);font-size:13px;letter-spacing:.03em}
+    .fieldnotes-download{display:inline-block;padding-bottom:4px;border-bottom:1px solid var(--gold);color:var(--ink);font-weight:600}
+    .fieldnotes-download:hover,.fieldnotes-download:focus-visible{color:var(--gold)}
+    .prints-wrap{background:#080a08;color:#f2f0ea}
+    .prints{display:grid;grid-template-columns:.78fr 1.22fr;gap:clamp(48px,8vw,120px);align-items:start}
+    .prints h2{max-width:430px}.prints-intro{max-width:430px;margin:24px 0 0;color:#b9bdb5;font-size:15px}.prints-intro strong{color:#f2f0ea;font-weight:500}
+    .price-list{border-top:1px solid #353a35}
+    .price-row{display:grid;grid-template-columns:1fr auto;align-items:baseline;gap:24px;padding:24px 0;border-bottom:1px solid #353a35}
+    .print-size{font:500 clamp(28px,3.4vw,44px)/1.1 var(--serif);letter-spacing:-.025em}.print-price{color:var(--gold-bright);font:500 clamp(25px,3vw,38px)/1 var(--serif)}
+    .edition-note{margin:28px 0 0;color:#d5d8d1;font-size:13px;letter-spacing:.035em}.inquiry{display:inline-block;margin-top:28px;padding-bottom:4px;border-bottom:1px solid var(--gold-bright);color:#fff;font-weight:600}
+    footer{border-top:1px solid var(--line)}
+    .footer-inner{width:min(1280px,100%);margin:auto;padding:48px clamp(20px,5vw,72px) max(48px,env(safe-area-inset-bottom));display:flex;justify-content:space-between;align-items:end;gap:30px}
+    .follow span{display:block;color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.14em}.follow strong{font:500 clamp(27px,4vw,46px)/1.2 var(--serif)}
+    .copyright{margin:0;color:var(--muted);font-size:12px;text-align:right}
+    @media(max-width:760px){
+      .nav{padding:20px}.navlinks{gap:16px}.navlinks a:nth-child(2){display:none}
+      .hero{min-height:88svh}.hero>img{object-position:center center}.hero>.photo-watermark{top:58%;right:20px;bottom:auto}.hero-copy{padding-bottom:46px}h1{font-size:clamp(42px,13vw,66px)}
+      .section{padding-top:78px;padding-bottom:78px}.section-head{align-items:start}.section-count{padding-top:11px}
+      .collection-grid{display:block}.collection{min-height:78vw;margin:0 0 14px}.collection:nth-child(2),.collection:nth-child(4){transform:none}
+      .fungi-film{grid-template-columns:1fr;gap:36px}.fungi-video-frame{width:min(420px,100%)}.fungi-copy{margin:auto}
+      .fungi-duo{grid-template-columns:1fr;gap:40px}
+      .elite-grid{display:grid;grid-template-columns:1fr;grid-template-rows:auto;gap:12px}.elite,.elite:first-child,.elite:nth-child(4){grid-row:auto;grid-column:auto;height:112vw;max-height:560px}.elite:nth-child(2){height:72vw}.elite:nth-child(4){height:74vw}
+      .gallery-slide{height:min(124vw,72svh)}.gallery-arrow{width:42px;height:42px}.gallery-prev{left:10px}.gallery-next{right:10px}.gallery-controls{gap:14px}.gallery-hint{font-size:11px}
+      .all-visible .gallery-viewport,.recent-fungi-grid{grid-template-columns:1fr;gap:12px}.all-visible .gallery-slide,.all-visible .gallery-slide:nth-child(1),.all-visible .gallery-slide:nth-child(6),.recent-fungi-photo,.recent-fungi-photo:first-child,.recent-fungi-photo:nth-child(4),.recent-fungi-photo:nth-child(5){grid-column:auto;aspect-ratio:auto;height:auto}.all-visible .gallery-slide img,.recent-fungi-photo img{height:auto;max-height:none;object-fit:contain}
+      .about-bio{margin-top:28px;font-size:28px}.rule{grid-template-columns:52px minmax(0,1fr);padding:24px 0}.prints{grid-template-columns:1fr;gap:44px}.prints-intro{margin-top:18px}.price-row{padding:20px 0}
+      .footer-inner{align-items:start;flex-direction:column}.copyright{text-align:left}
+    }
+    @media(max-width:420px){.navlinks{gap:12px;font-size:10px}.hero-note{font-size:12px}.section-head{grid-template-columns:1fr}.section-count{padding:0}}
+    @media(prefers-reduced-motion:reduce){html,.gallery-viewport{scroll-behavior:auto}.collection img,.elite img,.gallery-progress span{transition:none}}
+  </style>
+</head>
+<body>
+  <header class="nav" aria-label="Primary navigation">
+    <a class="wordmark" href="#top" aria-label="Back to top">
+      <svg viewBox="0 0 32 32" aria-hidden="true" focusable="false">
+        <g fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round">
+          <path d="M16 3.5 22.1 7l-6.2 10.7L9.8 7Z"/>
+          <path d="m22.1 7 6.1 3.5-6.2 10.7-6.1-3.5Z"/>
+          <path d="m28.2 10.5v7L15.9 17.7 22.1 7Z" transform="rotate(60 22.05 14.1)"/>
+          <path d="m22.2 25-6.1 3.5L9.9 17.8l6.1-3.5Z"/>
+          <path d="m16.1 28.5-6.1-3.5 6.2-10.7 6.1 3.5Z"/>
+          <path d="M10 25 3.9 21.5l6.2-10.7 6.1 3.5Z"/>
+        </g>
+      </svg>
+    </a>
+    <nav class="navlinks">
+      <a href="#work">Work</a><a href="#about">About</a><a href="#field-notes">Field Notes</a><a href="#contact">Contact</a>
+    </nav>
+  </header>
+
+  <section class="hero" id="top" aria-labelledby="hero-title">
+    <img src="asset-001.jpg" alt="Two honeybees feeding side by side on a bright yellow flower in full sunlight, with soft green foliage behind them">
+    <span class="photo-watermark" aria-hidden="true"><strong>© Evan Lowe</strong><small>@evantoocool99</small></span>
+    <div class="hero-copy">
+      <p class="kicker">MACRO · SHOT ON iPHONE</p>
+      <h1 id="hero-title">Just a guy with a camera and a dream.</h1>
+      <div class="hero-note">Fishers, Indiana</div>
+    </div>
+  </section>
+
+  <main>
+    <section class="section" id="work" aria-labelledby="collections-title">
+      <div class="section-head">
+        <div><p class="section-label">Selected work</p><h2 id="collections-title">Collections</h2></div>
+        <span class="section-count">Four ways of looking closer</span>
+      </div>
+      <div class="collection-grid">
+        <figure class="collection"><img src="asset-002.jpg" alt="Orange fritillary butterfly with wings spread among green leaves"><span class="photo-watermark" aria-hidden="true"><strong>© Evan Lowe</strong><small>@evantoocool99</small></span><figcaption><h3>Insects</h3><p>Small lives, held still.</p></figcaption></figure>
+        <figure class="collection"><img src="asset-003.jpg" alt="Black-and-white close-up of a layered zinnia flower"><span class="photo-watermark" aria-hidden="true"><strong>© Evan Lowe</strong><small>@evantoocool99</small></span><figcaption><h3>Floral</h3><p>Structure in bloom.</p></figcaption></figure>
+        <figure class="collection"><img src="asset-004.jpg" alt="Layered bracket fungi growing from a tree trunk in the woods"><span class="photo-watermark" aria-hidden="true"><strong>© Evan Lowe</strong><small>@evantoocool99</small></span><figcaption><h3>Fungi</h3><p>Found on the forest floor.</p></figcaption></figure>
+        <figure class="collection"><img src="asset-005.jpg" alt="Close-up of a pale green milkweed pod against bright summer foliage"><span class="photo-watermark" aria-hidden="true"><strong>© Evan Lowe</strong><small>@evantoocool99</small></span><figcaption><h3>Abstracts</h3><p>Nature, rearranged by the eye.</p></figcaption></figure>
+      </div>
+    </section>
+
+    <section class="fungi-film-wrap" id="fungi" aria-labelledby="fungi-title">
+      <div class="section">
+        <div class="section-head">
+          <div><p class="section-label">Fungi</p><h2 id="fungi-title">Inky cap</h2></div>
+          <span class="section-count">Field videos</span>
+        </div>
+        <div class="fungi-film">
+          <div class="fungi-video-frame">
+            <video controls playsinline preload="metadata" poster="asset-006.jpg" aria-label="Shaggy mane mushroom releasing black ink onto Evan's fingertips">
+              <source src="asset-007.mp4" type="video/mp4">
+              Your browser does not support embedded video.
+            </video>
+            <span class="photo-watermark" aria-hidden="true"><strong>© Evan Lowe</strong><small>@evantoocool99</small></span>
+          </div>
+          <div class="fungi-copy">
+            <h3>Shaggy mane, doing what it does.</h3>
+            <p class="fungi-caption">The ink came right off on my fingers. That’s exactly how the scene looked.</p>
+          </div>
+        </div>
+        <div class="fungi-duo">
+          <figure>
+            <div class="fungi-video-frame">
+              <video controls playsinline preload="metadata" poster="asset-008.jpg" aria-label="Shaggy mane mushroom laid beside a tape measure, measuring over 14 inches">
+                <source src="asset-009.mp4" type="video/mp4">
+                Your browser does not support embedded video.
+              </video>
+              <span class="photo-watermark" aria-hidden="true"><strong>© Evan Lowe</strong><small>@evantoocool99</small></span>
+            </div>
+            <figcaption>Shaggy mane, tape-measured over 14 inches.</figcaption>
+          </figure>
+          <figure>
+            <div class="fungi-video-frame">
+              <video controls playsinline preload="metadata" poster="asset-010.jpg" aria-label="Dryad's saddle bracket fungus with a tape measure across it reading 15 and one eighth inches">
+                <source src="asset-011.mp4" type="video/mp4">
+                Your browser does not support embedded video.
+              </video>
+              <span class="photo-watermark" aria-hidden="true"><strong>© Evan Lowe</strong><small>@evantoocool99</small></span>
+            </div>
+            <figcaption>15⅛-inch dryad's saddle, tape-measured.</figcaption>
+          </figure>
+        </div>
+      </div>
+    </section>
+
+    <section class="gallery-wrap all-visible" aria-labelledby="shaggy-gallery-title">
+      <div class="section">
+        <div class="section-head"><div><p class="section-label">2026 collection</p><h2 id="shaggy-gallery-title">Best of Shaggy Manes 2026</h2></div><span class="section-count">Nine photographs</span></div>
+        <div class="gallery-frame">
+          <div class="gallery-viewport" id="shaggy-gallery-viewport" tabindex="0" aria-label="Best of Shaggy Manes 2026 photography carousel">
+            <figure class="gallery-slide"><img src="asset-012.jpg" alt="Mature shaggy mane mushroom with a black inky rim among autumn leaves"><span class="photo-watermark" aria-hidden="true"><strong>© Evan Lowe</strong><small>@evantoocool99</small></span></figure>
+            <figure class="gallery-slide"><img src="asset-013.jpg" alt="Tall shaggy mane mushroom beginning to ink beneath a fallen log"><span class="photo-watermark" aria-hidden="true"><strong>© Evan Lowe</strong><small>@evantoocool99</small></span></figure>
+            <figure class="gallery-slide"><img src="asset-014.jpg" alt="Shaggy mane mushroom shown at full height beside a hand for scale"><span class="photo-watermark" aria-hidden="true"><strong>© Evan Lowe</strong><small>@evantoocool99</small></span></figure>
+            <figure class="gallery-slide"><img src="asset-015.jpg" alt="Young egg-shaped shaggy mane mushroom lit among green plants and fallen leaves"><span class="photo-watermark" aria-hidden="true"><strong>© Evan Lowe</strong><small>@evantoocool99</small></span></figure>
+            <figure class="gallery-slide"><img src="asset-016.jpg" alt="Top-down view of a young shaggy mane mushroom on the woodland floor"><span class="photo-watermark" aria-hidden="true"><strong>© Evan Lowe</strong><small>@evantoocool99</small></span></figure>
+            <figure class="gallery-slide"><img src="asset-017.jpg" alt="Long shaggy mane stem laid beside a tape measure on dark wood"><span class="photo-watermark" aria-hidden="true"><strong>© Evan Lowe</strong><small>@evantoocool99</small></span></figure>
+            <figure class="gallery-slide"><img src="asset-018.jpg" alt="Young shaggy mane mushroom rising through grass beside calm water"><span class="photo-watermark" aria-hidden="true"><strong>© Evan Lowe</strong><small>@evantoocool99</small></span></figure>
+            <figure class="gallery-slide"><img src="asset-019.jpg" alt="Dense cluster of shaggy mane mushrooms at different stages in autumn undergrowth"><span class="photo-watermark" aria-hidden="true"><strong>© Evan Lowe</strong><small>@evantoocool99</small></span></figure>
+            <figure class="gallery-slide"><img src="asset-020.jpg" alt="Top-down macro view of a shaggy mane mushroom ringed with glossy black ink"><span class="photo-watermark" aria-hidden="true"><strong>© Evan Lowe</strong><small>@evantoocool99</small></span></figure>
+          </div>
+          <button class="gallery-arrow gallery-prev" type="button" aria-label="Previous photograph"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 5-7 7 7 7"/></svg></button>
+          <button class="gallery-arrow gallery-next" type="button" aria-label="Next photograph"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 7 7-7 7"/></svg></button>
+        </div>
+        <div class="gallery-controls">
+          <span class="gallery-status" aria-live="polite">01 / 09</span>
+          <div class="gallery-progress" aria-hidden="true"><span></span></div>
+          <span class="gallery-hint">Swipe or use arrows</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="gallery-wrap" aria-labelledby="butterflies-gallery-title" style="--gallery-count:39">
+      <div class="section">
+        <div class="section-head"><div><p class="section-label">2026 collection</p><h2 id="butterflies-gallery-title">Best of Butterflies 2026</h2></div><span class="section-count">39 photographs · 17 species</span></div>
+        <div class="gallery-frame">
+          <div class="gallery-viewport" id="butterflies-gallery-viewport" tabindex="0" aria-label="Best of Butterflies 2026 photography carousel">
+            <figure class="gallery-slide"><img src="asset-021.jpg" alt="Sachem skipper face-on on purple salvia with its proboscis extended"><span class="photo-watermark" aria-hidden="true"><strong>© Evan Lowe</strong><small>@evantoocool99</small></span><p class="caption">Sachem · <em>Atalopedes campestris</em></p></figure>
+            <figure class="gallery-slide"><img src="asset-022.jpg" alt="Monarch butterfly in profile on a marigold"><span class="photo-watermark" aria-hidden="true"><strong>© Evan Lowe</strong><small>@evantoocool99</small></span><p class="caption">Monarch · <em>Danaus plexippus</em></p></figure>
+            <figure class="gallery-slide"><img src="asset-023.jpg" alt="Common buckeye butterfly with wings spread on yellow marigolds"><span class="photo-watermark" aria-hidden="true"><strong>© Evan Lowe</strong><small>@evantoocool99</small></span><p class="caption">Common Buckeye · <em>Junonia coenia</em></p></figure>
+            <figure class="gallery-slide"><img src="asset-024.jpg" alt="Hackberry emperor butterfly in profile on the edge of a leaf"><span class="photo-watermark" aria-hidden="true"><strong>© Evan Lowe</strong><small>@evantoocool99</small></span><p class="caption">Hackberry Emperor · <em>Asterocampa celtis</em></p></figure>
+            <figure class="gallery-slide"><img src="asset-025.jpg" alt="Male cabbage white butterfly with a single forewing spot, perched on catnip"><span class="photo-watermark" aria-hidden="true"><strong>© Evan Lowe</strong><small>@evantoocool99</small></span><p class="caption">Cabbage White, male · <em>Pieris rapae</em></p></figure>
+            <figure class="gallery-slide"><img src="asset-026.jpg" alt="Red-spotted purple butterfly showing its orange-spotted underside on leaves"><span class="photo-watermark" aria-hidden="true"><strong>© Evan Lowe</strong><small>@evantoocool99</small></span><p class="caption">Red-spotted Purple · <em>Limenitis arthemis astyanax</em></p></figure>
+            <figure class="gallery-slide"><img src="asset-027.jpg" alt="Summer azure butterfly showing its silvery underside on the forest floor"><span class="photo-watermark" aria-hidden="true"><strong>© Evan Lowe</strong><small>@evantoocool99</small></span><p class="caption">Summer Azure · <em>Celastrina neglecta</em></p></figure>
+            <figure class="gallery-slide"><img src="asset-028.jpg" alt="Great spangled fritillary butterfly standing on a fingertip beside a thistle"><span class="photo-watermark" aria-hidden="true"><strong>© Evan Lowe</strong><small>@evantoocool99</small></span><p class="caption">Great Spangled Fritillary · <em>Speyeria cybele</em></p></figure>
+            <figure class="gallery-slide"><img src="asset-029.jpg" alt="Summer azure butterfly with powder-blue wings open"><span class="photo-watermark" aria-hidden="true"><strong>© Evan Lowe</strong><small>@evantoocool99</small></span><p class="caption">Summer Azure · <em>Celastrina neglecta</em></p></figure>
+            <figure class="gallery-slide"><img src="asset-030.jpg" alt="Red-spotted purple butterfly from above, blue melting into copper"><span class="photo-watermark" aria-hidden="true"><strong>© Evan Lowe</strong><small>@evantoocool99</small></span><p class="caption">Red-spotted Purple · <em>Limenitis arthemis astyanax</em></p></figure>
+            <figure class="gallery-slide"><img src="asset-031.jpg" alt="Peck's skipper butterfly face-on on a thistle"><span class="photo-watermark" aria-hidden="true"><strong>© Evan Lowe</strong><small>@evantoocool99</small></span><p class="caption">Peck's Skipper · <em>Polites peckius</em></p></figure>
+            <figure class="gallery-slide"><img src="asset-032.jpg" alt="Painted lady butterfly in profile on a marigold stalk"><span class="photo-watermark" aria-hidden="true"><strong>© Evan Lowe</strong><small>@evantoocool99</small></span><p class="caption">Painted Lady · <em>Vanessa cardui</em></p></figure>
+            <figure class="gallery-slide"><img src="asset-033.jpg" alt="Pearl crescent butterfly spread on a yellow flower"><span class="photo-watermark" aria-hidden="true"><strong>© Evan Lowe</strong><small>@evantoocool99</small></span><p class="caption">Pearl Crescent · <em>Phyciodes tharos</em></p></figure>
+            <figure class="gallery-slide"><img src="asset-034.jpg" alt="Female cabbage white butterfly in profile with two forewing spots"><span class="photo-watermark" aria-hidden="true"><strong>© Evan Lowe</strong><small>@evantoocool99</small></span><p class="caption">Cabbage White, female · <em>Pieris rapae</em></p></figure>
+            <figure class="gallery-slide"><img src="asset-035.jpg" alt="Great spangled fritillary butterfly in a full orange spread"><span class="photo-watermark" aria-hidden="true"><strong>© Evan Lowe</strong><small>@evantoocool99</small></span><p class="caption">Great Spangled Fritillary · <em>Speyeria cybele</em></p></figure>
+            <figure class="gallery-slide"><img src="asset-036.jpg" alt="Great spangled fritillary butterfly face-on, drinking from a thistle bloom"><span class="photo-watermark" aria-hidden="true"><strong>© Evan Lowe</strong><small>@evantoocool99</small></span><p class="caption">Great Spangled Fritillary · <em>Speyeria cybele</em></p></figure>
+            <figure class="gallery-slide"><img src="asset-037.jpg" alt="Clouded sulphur butterfly in profile on clover, green eyes catching the light"><span class="photo-watermark" aria-hidden="true"><strong>© Evan Lowe</strong><small>@evantoocool99</small></span><p class="caption">Clouded Sulphur · <em>Colias philodice</em></p></figure>
+            <figure class="gallery-slide"><img src="asset-038.jpg" alt="Red admiral butterfly with worn wings, spread on gravel"><span class="photo-watermark" aria-hidden="true"><strong>© Evan Lowe</strong><small>@evantoocool99</small></span><p class="caption">Red Admiral · <em>Vanessa atalanta</em></p></figure>
+            <figure class="gallery-slide"><img src="asset-039.jpg" alt="Question mark butterfly showing its dead-leaf underside on a leaf"><span class="photo-watermark" aria-hidden="true"><strong>© Evan Lowe</strong><small>@evantoocool99</small></span><p class="caption">Question Mark · <em>Polygonia interrogationis</em></p></figure>
+            <figure class="gallery-slide"><img src="asset-040.jpg" alt="Two cabbage white butterflies in flight over goldenrod"><span class="photo-watermark" aria-hidden="true"><strong>© Evan Lowe</strong><small>@evantoocool99</small></span><p class="caption">Cabbage Whites in flight · <em>Pieris rapae</em></p></figure>
+            <figure class="gallery-slide"><img src="asset-041.jpg" alt="Extreme face macro of a Peck's skipper, proboscis curled like a watch spring"><span class="photo-watermark" aria-hidden="true"><strong>© Evan Lowe</strong><small>@evantoocool99</small></span><p class="caption">Peck's Skipper · <em>Polites peckius</em></p></figure>
+            <figure class="gallery-slide"><img src="asset-042.jpg" alt="Pearl crescent butterfly spread on a yellow flower, a second take"><span class="photo-watermark" aria-hidden="true"><strong>© Evan Lowe</strong><small>@evantoocool99</small></span><p class="caption">Pearl Crescent · <em>Phyciodes tharos</em></p></figure>
+            <figure class="gallery-slide"><img src="asset-043.jpg" alt="Common buckeye butterfly wide in pine straw"><span class="photo-watermark" aria-hidden="true"><strong>© Evan Lowe</strong><small>@evantoocool99</small></span><p class="caption">Common Buckeye · <em>Junonia coenia</em></p></figure>
+            <figure class="gallery-slide"><img src="asset-044.jpg" alt="Common buckeye butterfly close up in pine straw"><span class="photo-watermark" aria-hidden="true"><strong>© Evan Lowe</strong><small>@evantoocool99</small></span><p class="caption">Common Buckeye · <em>Junonia coenia</em></p></figure>
+            <figure class="gallery-slide"><img src="asset-045.jpg" alt="Common buckeye butterfly on a white fence post casting a long shadow"><span class="photo-watermark" aria-hidden="true"><strong>© Evan Lowe</strong><small>@evantoocool99</small></span><p class="caption">Common Buckeye · <em>Junonia coenia</em></p></figure>
+            <figure class="gallery-slide"><img src="asset-046.jpg" alt="Monarch butterfly with wings flat open on hackberry leaves against the sky"><span class="photo-watermark" aria-hidden="true"><strong>© Evan Lowe</strong><small>@evantoocool99</small></span><p class="caption">Monarch · <em>Danaus plexippus</em></p></figure>
+            <figure class="gallery-slide"><img src="asset-047.jpg" alt="Duskywing butterfly face-on with wings flat on concrete"><span class="photo-watermark" aria-hidden="true"><strong>© Evan Lowe</strong><small>@evantoocool99</small></span><p class="caption">Duskywing · <em>Erynnis</em> sp.</p></figure>
+            <figure class="gallery-slide"><img src="asset-048.jpg" alt="Clouded sulphur butterfly in a wide frame across a clover field"><span class="photo-watermark" aria-hidden="true"><strong>© Evan Lowe</strong><small>@evantoocool99</small></span><p class="caption">Clouded Sulphur · <em>Colias philodice</em></p></figure>
+            <figure class="gallery-slide"><img src="asset-049.jpg" alt="Summer azure butterfly face-on at ground level, proboscis down"><span class="photo-watermark" aria-hidden="true"><strong>© Evan Lowe</strong><small>@evantoocool99</small></span><p class="caption">Summer Azure · <em>Celastrina neglecta</em></p></figure>
+            <figure class="gallery-slide"><img src="asset-050.jpg" alt="Peck's skipper butterfly in profile on yellow lantana"><span class="photo-watermark" aria-hidden="true"><strong>© Evan Lowe</strong><small>@evantoocool99</small></span><p class="caption">Peck's Skipper · <em>Polites peckius</em></p></figure>
+            <figure class="gallery-slide"><img src="asset-051.jpg" alt="Monarch butterfly in profile on a marigold beside a fingertip"><span class="photo-watermark" aria-hidden="true"><strong>© Evan Lowe</strong><small>@evantoocool99</small></span><p class="caption">Monarch · <em>Danaus plexippus</em></p></figure>
+            <figure class="gallery-slide"><img src="asset-052.jpg" alt="Eastern comma butterfly hanging in the brush in dead-leaf camouflage"><span class="photo-watermark" aria-hidden="true"><strong>© Evan Lowe</strong><small>@evantoocool99</small></span><p class="caption">Eastern Comma · <em>Polygonia comma</em></p></figure>
+            <figure class="gallery-slide"><img src="asset-053.jpg" alt="Peck's skipper butterfly in profile on purple salvia"><span class="photo-watermark" aria-hidden="true"><strong>© Evan Lowe</strong><small>@evantoocool99</small></span><p class="caption">Peck's Skipper · <em>Polites peckius</em></p></figure>
+            <figure class="gallery-slide"><img src="asset-054.jpg" alt="Painted lady butterfly spread flat on tree bark"><span class="photo-watermark" aria-hidden="true"><strong>© Evan Lowe</strong><small>@evantoocool99</small></span><p class="caption">Painted Lady · <em>Vanessa cardui</em></p></figure>
+            <figure class="gallery-slide"><img src="asset-055.jpg" alt="Painted lady butterfly with wings mid-flutter on takeoff from tree bark"><span class="photo-watermark" aria-hidden="true"><strong>© Evan Lowe</strong><small>@evantoocool99</small></span><p class="caption">Painted Lady · <em>Vanessa cardui</em></p></figure>
+            <figure class="gallery-slide"><img src="asset-056.jpg" alt="Duskywing butterfly spread in leaf litter"><span class="photo-watermark" aria-hidden="true"><strong>© Evan Lowe</strong><small>@evantoocool99</small></span><p class="caption">Duskywing · <em>Erynnis</em> sp.</p></figure>
+            <figure class="gallery-slide"><img src="asset-057.jpg" alt="Orange sulphur butterfly in grass with sunlight shining through its wings"><span class="photo-watermark" aria-hidden="true"><strong>© Evan Lowe</strong><small>@evantoocool99</small></span><p class="caption">Orange Sulphur · <em>Colias eurytheme</em></p></figure>
+            <figure class="gallery-slide"><img src="asset-058.jpg" alt="Duskywing butterfly face-front from above with wings spread on rock"><span class="photo-watermark" aria-hidden="true"><strong>© Evan Lowe</strong><small>@evantoocool99</small></span><p class="caption">Duskywing · <em>Erynnis</em> sp.</p></figure>
+            <figure class="gallery-slide"><img src="asset-059.jpg" alt="Common buckeye butterfly in a wide environmental frame in mulch and grass"><span class="photo-watermark" aria-hidden="true"><strong>© Evan Lowe</strong><small>@evantoocool99</small></span><p class="caption">Common Buckeye · <em>Junonia coenia</em></p></figure>
+          </div>
+          <button class="gallery-arrow gallery-prev" type="button" aria-label="Previous photograph"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 5-7 7 7 7"/></svg></button>
+          <button class="gallery-arrow gallery-next" type="button" aria-label="Next photograph"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 7 7-7 7"/></svg></button>
+        </div>
+        <div class="gallery-controls">
+          <span class="gallery-status" aria-live="polite">01 / 39</span>
+          <div class="gallery-progress" aria-hidden="true"><span></span></div>
+          <span class="gallery-hint">Swipe or use arrows</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="recent-fungi-wrap" aria-labelledby="recent-fungi-title">
+      <div class="section">
+        <div class="section-head">
+          <div><p class="section-label">New from the field</p><h2 id="recent-fungi-title">Recent Fungi</h2></div>
+          <span class="section-count">Five photographs</span>
+        </div>
+        <div class="recent-fungi-grid">
+          <figure class="recent-fungi-photo"><img src="asset-060.jpg" alt="Pale bracket fungus curving out from rough tree bark"><span class="photo-watermark" aria-hidden="true"><strong>© Evan Lowe</strong><small>@evantoocool99</small></span></figure>
+          <figure class="recent-fungi-photo"><img src="asset-061.jpg" alt="Brown and cream bracket fungus growing from a tree trunk"><span class="photo-watermark" aria-hidden="true"><strong>© Evan Lowe</strong><small>@evantoocool99</small></span></figure>
+          <figure class="recent-fungi-photo"><img src="asset-062.jpg" alt="Cluster of layered brown and white bracket fungi on tree bark"><span class="photo-watermark" aria-hidden="true"><strong>© Evan Lowe</strong><small>@evantoocool99</small></span></figure>
+          <figure class="recent-fungi-photo"><img src="asset-063.jpg" alt="Close-up of a broad brown bracket fungus with a pale rim"><span class="photo-watermark" aria-hidden="true"><strong>© Evan Lowe</strong><small>@evantoocool99</small></span></figure>
+          <figure class="recent-fungi-photo"><img src="asset-064.jpg" alt="Multiple brown bracket fungi encircling the base of a tree"><span class="photo-watermark" aria-hidden="true"><strong>© Evan Lowe</strong><small>@evantoocool99</small></span></figure>
+        </div>
+      </div>
+    </section>
+
+    <section class="elite-wrap" aria-labelledby="elite-title">
+      <div class="section">
+        <div class="section-head"><div><p class="section-label">Defining frames</p><h2 id="elite-title">The Elite Wall</h2></div><span class="section-count">Four photographs</span></div>
+        <div class="elite-grid">
+          <figure class="elite"><img src="asset-065.jpg" alt="Face-to-face macro portrait of a metallic green bottle fly"><span class="photo-watermark" aria-hidden="true"><strong>© Evan Lowe</strong><small>@evantoocool99</small></span><p class="caption">Face to face.</p></figure>
+          <figure class="elite"><img src="asset-066.jpg" alt="Red-spotted purple butterfly perched among green leaves"><span class="photo-watermark" aria-hidden="true"><strong>© Evan Lowe</strong><small>@evantoocool99</small></span><p class="caption">Between the leaves.</p></figure>
+          <figure class="elite"><img src="asset-067.jpg" alt="White mushroom emerging from the dark forest floor"><span class="photo-watermark" aria-hidden="true"><strong>© Evan Lowe</strong><small>@evantoocool99</small></span><p class="caption">A little light.</p></figure>
+          <figure class="elite"><img src="asset-003.jpg" alt="Monochrome close-up revealing the geometry of a zinnia flower"><span class="photo-watermark" aria-hidden="true"><strong>© Evan Lowe</strong><small>@evantoocool99</small></span><p class="caption">In black and white.</p></figure>
+        </div>
+      </div>
+    </section>
+
+    <section class="gallery-wrap" aria-labelledby="gallery-title" style="--gallery-count:30">
+      <div class="section">
+        <div class="section-head"><div><p class="section-label">A closer look</p><h2 id="gallery-title">Gallery</h2></div><span class="section-count">30 photographs</span></div>
+        <div class="gallery-frame">
+          <div class="gallery-viewport" id="gallery-viewport" tabindex="0" aria-label="Photography gallery carousel">
+            <figure class="gallery-slide"><img src="asset-068.jpg" alt="Macro and nature photograph 1 of 30"><span class="photo-watermark" aria-hidden="true"><strong>© Evan Lowe</strong><small>@evantoocool99</small></span></figure>
+            <figure class="gallery-slide"><img src="asset-030.jpg" alt="Macro and nature photograph 2 of 30"><span class="photo-watermark" aria-hidden="true"><strong>© Evan Lowe</strong><small>@evantoocool99</small></span></figure>
+            <figure class="gallery-slide"><img src="asset-069.jpg" alt="Macro and nature photograph 3 of 30"><span class="photo-watermark" aria-hidden="true"><strong>© Evan Lowe</strong><small>@evantoocool99</small></span></figure>
+            <figure class="gallery-slide"><img src="asset-070.jpg" alt="Macro and nature photograph 4 of 30"><span class="photo-watermark" aria-hidden="true"><strong>© Evan Lowe</strong><small>@evantoocool99</small></span></figure>
+            <figure class="gallery-slide"><img src="asset-071.jpg" alt="Macro and nature photograph 5 of 30"><span class="photo-watermark" aria-hidden="true"><strong>© Evan Lowe</strong><small>@evantoocool99</small></span></figure>
+            <figure class="gallery-slide"><img src="asset-072.jpg" alt="Macro and nature photograph 6 of 30"><span class="photo-watermark" aria-hidden="true"><strong>© Evan Lowe</strong><small>@evantoocool99</small></span></figure>
+            <figure class="gallery-slide"><img src="asset-073.jpg" alt="Macro and nature photograph 7 of 30"><span class="photo-watermark" aria-hidden="true"><strong>© Evan Lowe</strong><small>@evantoocool99</small></span></figure>
+            <figure class="gallery-slide"><img src="asset-074.jpg" alt="Macro and nature photograph 8 of 30"><span class="photo-watermark" aria-hidden="true"><strong>© Evan Lowe</strong><small>@evantoocool99</small></span></figure>
+            <figure class="gallery-slide"><img src="asset-075.jpg" alt="Macro and nature photograph 9 of 30"><span class="photo-watermark" aria-hidden="true"><strong>© Evan Lowe</strong><small>@evantoocool99</small></span></figure>
+            <figure class="gallery-slide"><img src="asset-023.jpg" alt="Macro and nature photograph 10 of 30"><span class="photo-watermark" aria-hidden="true"><strong>© Evan Lowe</strong><small>@evantoocool99</small></span></figure>
+            <figure class="gallery-slide"><img src="asset-076.jpg" alt="Macro and nature photograph 11 of 30"><span class="photo-watermark" aria-hidden="true"><strong>© Evan Lowe</strong><small>@evantoocool99</small></span></figure>
+            <figure class="gallery-slide"><img src="asset-077.jpg" alt="Macro and nature photograph 12 of 30"><span class="photo-watermark" aria-hidden="true"><strong>© Evan Lowe</strong><small>@evantoocool99</small></span></figure>
+            <figure class="gallery-slide"><img src="asset-078.jpg" alt="Macro and nature photograph 13 of 30"><span class="photo-watermark" aria-hidden="true"><strong>© Evan Lowe</strong><small>@evantoocool99</small></span></figure>
+            <figure class="gallery-slide"><img src="asset-079.jpg" alt="Macro and nature photograph 14 of 30"><span class="photo-watermark" aria-hidden="true"><strong>© Evan Lowe</strong><small>@evantoocool99</small></span></figure>
+            <figure class="gallery-slide"><img src="asset-080.jpg" alt="Macro and nature photograph 15 of 30"><span class="photo-watermark" aria-hidden="true"><strong>© Evan Lowe</strong><small>@evantoocool99</small></span></figure>
+            <figure class="gallery-slide"><img src="asset-081.jpg" alt="Macro and nature photograph 16 of 30"><span class="photo-watermark" aria-hidden="true"><strong>© Evan Lowe</strong><small>@evantoocool99</small></span></figure>
+            <figure class="gallery-slide"><img src="asset-082.jpg" alt="Macro and nature photograph 17 of 30"><span class="photo-watermark" aria-hidden="true"><strong>© Evan Lowe</strong><small>@evantoocool99</small></span></figure>
+            <figure class="gallery-slide"><img src="asset-083.jpg" alt="Macro and nature photograph 18 of 30"><span class="photo-watermark" aria-hidden="true"><strong>© Evan Lowe</strong><small>@evantoocool99</small></span></figure>
+            <figure class="gallery-slide"><img src="asset-084.jpg" alt="Macro and nature photograph 19 of 30"><span class="photo-watermark" aria-hidden="true"><strong>© Evan Lowe</strong><small>@evantoocool99</small></span></figure>
+            <figure class="gallery-slide"><img src="asset-085.jpg" alt="Macro and nature photograph 20 of 30"><span class="photo-watermark" aria-hidden="true"><strong>© Evan Lowe</strong><small>@evantoocool99</small></span></figure>
+            <figure class="gallery-slide"><img src="asset-086.jpg" alt="Macro and nature photograph 21 of 30"><span class="photo-watermark" aria-hidden="true"><strong>© Evan Lowe</strong><small>@evantoocool99</small></span></figure>
+            <figure class="gallery-slide"><img src="asset-087.jpg" alt="Macro and nature photograph 22 of 30"><span class="photo-watermark" aria-hidden="true"><strong>© Evan Lowe</strong><small>@evantoocool99</small></span></figure>
+            <figure class="gallery-slide"><img src="asset-088.jpg" alt="Macro and nature photograph 23 of 30"><span class="photo-watermark" aria-hidden="true"><strong>© Evan Lowe</strong><small>@evantoocool99</small></span></figure>
+            <figure class="gallery-slide"><img src="asset-089.jpg" alt="Macro and nature photograph 24 of 30"><span class="photo-watermark" aria-hidden="true"><strong>© Evan Lowe</strong><small>@evantoocool99</small></span></figure>
+            <figure class="gallery-slide"><img src="asset-090.jpg" alt="Macro and nature photograph 25 of 30"><span class="photo-watermark" aria-hidden="true"><strong>© Evan Lowe</strong><small>@evantoocool99</small></span></figure>
+            <figure class="gallery-slide"><img src="asset-091.jpg" alt="Macro and nature photograph 26 of 30"><span class="photo-watermark" aria-hidden="true"><strong>© Evan Lowe</strong><small>@evantoocool99</small></span></figure>
+            <figure class="gallery-slide"><img src="asset-092.jpg" alt="Macro and nature photograph 27 of 30"><span class="photo-watermark" aria-hidden="true"><strong>© Evan Lowe</strong><small>@evantoocool99</small></span></figure>
+            <figure class="gallery-slide"><img src="asset-093.jpg" alt="Macro and nature photograph 28 of 30"><span class="photo-watermark" aria-hidden="true"><strong>© Evan Lowe</strong><small>@evantoocool99</small></span></figure>
+            <figure class="gallery-slide"><img src="asset-094.jpg" alt="Macro and nature photograph 29 of 30"><span class="photo-watermark" aria-hidden="true"><strong>© Evan Lowe</strong><small>@evantoocool99</small></span></figure>
+            <figure class="gallery-slide"><img src="asset-095.jpg" alt="Macro and nature photograph 30 of 30"><span class="photo-watermark" aria-hidden="true"><strong>© Evan Lowe</strong><small>@evantoocool99</small></span></figure>
+          </div>
+          <button class="gallery-arrow gallery-prev" type="button" aria-label="Previous photograph"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 5-7 7 7 7"/></svg></button>
+          <button class="gallery-arrow gallery-next" type="button" aria-label="Next photograph"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 7 7-7 7"/></svg></button>
+        </div>
+        <div class="gallery-controls">
+          <span class="gallery-status" aria-live="polite">01 / 30</span>
+          <div class="gallery-progress" aria-hidden="true"><span></span></div>
+          <span class="gallery-hint">Swipe or use arrows</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="gallery-wrap" aria-labelledby="field-gallery-title" style="--gallery-count:50">
+      <div class="section">
+        <div class="section-head"><div><p class="section-label">A wider view</p><h2 id="field-gallery-title">More from the Field</h2></div><span class="section-count">50 photographs</span></div>
+        <div class="gallery-frame">
+          <div class="gallery-viewport" id="field-gallery-viewport" tabindex="0" aria-label="More from the Field photography carousel">
+            <figure class="gallery-slide"><img src="asset-096.jpg" alt="Macro and nature photograph 1 of 50"><span class="photo-watermark" aria-hidden="true"><strong>© Evan Lowe</strong><small>@evantoocool99</small></span></figure>
+            <figure class="gallery-slide"><img src="asset-097.jpg" alt="Macro and nature photograph 2 of 50"><span class="photo-watermark" aria-hidden="true"><strong>© Evan Lowe</strong><small>@evantoocool99</small></span></figure>
+            <figure class="gallery-slide"><img src="asset-098.jpg" alt="Macro and nature photograph 3 of 50"><span class="photo-watermark" aria-hidden="true"><strong>© Evan Lowe</strong><small>@evantoocool99</small></span></figure>
+            <figure class="gallery-slide"><img src="asset-099.jpg" alt="Macro and nature photograph 4 of 50"><span class="photo-watermark" aria-hidden="true"><strong>© Evan Lowe</strong><small>@evantoocool99</small></span></figure>
+            <figure class="gallery-slide"><img src="asset-100.jpg" alt="Macro and nature photograph 5 of 50"><span class="photo-watermark" aria-hidden="true"><strong>© Evan Lowe</strong><small>@evantoocool99</small></span></figure>
+            <figure class="gallery-slide"><img src="asset-041.jpg" alt="Macro and nature photograph 6 of 50"><span class="photo-watermark" aria-hidden="true"><strong>© Evan Lowe</strong><small>@evantoocool99</small></span></figure>
+            <figure class="gallery-slide"><img src="asset-021.jpg" alt="Macro and nature photograph 7 of 50"><span class="photo-watermark" aria-hidden="true"><strong>© Evan Lowe</strong><small>@evantoocool99</small></span></figure>
+            <figure class="gallery-slide"><img src="asset-032.jpg" alt="Macro and nature photograph 8 of 50"><span class="photo-watermark" aria-hidden="true"><strong>© Evan Lowe</strong><small>@evantoocool99</small></span></figure>
+            <figure class="gallery-slide"><img src="asset-055.jpg" alt="Macro and nature photograph 9 of 50"><span class="photo-watermark" aria-hidden="true"><strong>© Evan Lowe</strong><small>@evantoocool99</small></span></figure>
+            <figure class="gallery-slide"><img src="asset-101.jpg" alt="Macro and nature photograph 10 of 50"><span class="photo-watermark" aria-hidden="true"><strong>© Evan Lowe</strong><small>@evantoocool99</small></span></figure>
+            <figure class="gallery-slide"><img src="asset-102.jpg" alt="Macro and nature photograph 11 of 50"><span class="photo-watermark" aria-hidden="true"><strong>© Evan Lowe</strong><small>@evantoocool99</small></span></figure>
+            <figure class="gallery-slide"><img src="asset-103.jpg" alt="Macro and nature photograph 12 of 50"><span class="photo-watermark" aria-hidden="true"><strong>© Evan Lowe</strong><small>@evantoocool99</small></span></figure>
+            <figure class="gallery-slide"><img src="asset-104.jpg" alt="Macro and nature photograph 13 of 50"><span class="photo-watermark" aria-hidden="true"><strong>© Evan Lowe</strong><small>@evantoocool99</small></span></figure>
+            <figure class="gallery-slide"><img src="asset-105.jpg" alt="Macro and nature photograph 14 of 50"><span class="photo-watermark" aria-hidden="true"><strong>© Evan Lowe</strong><small>@evantoocool99</small></span></figure>
+            <figure class="gallery-slide"><img src="asset-036.jpg" alt="Macro and nature photograph 15 of 50"><span class="photo-watermark" aria-hidden="true"><strong>© Evan Lowe</strong><small>@evantoocool99</small></span></figure>
+            <figure class="gallery-slide"><img src="asset-106.jpg" alt="Macro and nature photograph 16 of 50"><span class="photo-watermark" aria-hidden="true"><strong>© Evan Lowe</strong><small>@evantoocool99</small></span></figure>
+            <figure class="gallery-slide"><img src="asset-029.jpg" alt="Macro and nature photograph 17 of 50"><span class="photo-watermark" aria-hidden="true"><strong>© Evan Lowe</strong><small>@evantoocool99</small></span></figure>
+            <figure class="gallery-slide"><img src="asset-107.jpg" alt="Macro and nature photograph 18 of 50"><span class="photo-watermark" aria-hidden="true"><strong>© Evan Lowe</strong><small>@evantoocool99</small></span></figure>
+            <figure class="gallery-slide"><img src="asset-108.jpg" alt="Macro and nature photograph 19 of 50"><span class="photo-watermark" aria-hidden="true"><strong>© Evan Lowe</strong><small>@evantoocool99</small></span></figure>
+            <figure class="gallery-slide"><img src="asset-109.jpg" alt="Macro and nature photograph 20 of 50"><span class="photo-watermark" aria-hidden="true"><strong>© Evan Lowe</strong><small>@evantoocool99</small></span></figure>
+            <figure class="gallery-slide"><img src="asset-110.jpg" alt="Macro and nature photograph 21 of 50"><span class="photo-watermark" aria-hidden="true"><strong>© Evan Lowe</strong><small>@evantoocool99</small></span></figure>
+            <figure class="gallery-slide"><img src="asset-111.jpg" alt="Macro and nature photograph 22 of 50"><span class="photo-watermark" aria-hidden="true"><strong>© Evan Lowe</strong><small>@evantoocool99</small></span></figure>
+            <figure class="gallery-slide"><img src="asset-112.jpg" alt="Macro and nature photograph 23 of 50"><span class="photo-watermark" aria-hidden="true"><strong>© Evan Lowe</strong><small>@evantoocool99</small></span></figure>
+            <figure class="gallery-slide"><img src="asset-113.jpg" alt="Macro and nature photograph 24 of 50"><span class="photo-watermark" aria-hidden="true"><strong>© Evan Lowe</strong><small>@evantoocool99</small></span></figure>
+            <figure class="gallery-slide"><img src="asset-114.jpg" alt="Macro and nature photograph 25 of 50"><span class="photo-watermark" aria-hidden="true"><strong>© Evan Lowe</strong><small>@evantoocool99</small></span></figure>
+            <figure class="gallery-slide"><img src="asset-115.jpg" alt="Macro and nature photograph 26 of 50"><span class="photo-watermark" aria-hidden="true"><strong>© Evan Lowe</strong><small>@evantoocool99</small></span></figure>
+            <figure class="gallery-slide"><img src="asset-116.jpg" alt="Macro and nature photograph 27 of 50"><span class="photo-watermark" aria-hidden="true"><strong>© Evan Lowe</strong><small>@evantoocool99</small></span></figure>
+            <figure class="gallery-slide"><img src="asset-117.jpg" alt="Macro and nature photograph 28 of 50"><span class="photo-watermark" aria-hidden="true"><strong>© Evan Lowe</strong><small>@evantoocool99</small></span></figure>
+            <figure class="gallery-slide"><img src="asset-118.jpg" alt="Macro and nature photograph 29 of 50"><span class="photo-watermark" aria-hidden="true"><strong>© Evan Lowe</strong><small>@evantoocool99</small></span></figure>
+            <figure class="gallery-slide"><img src="asset-119.jpg" alt="Macro and nature photograph 30 of 50"><span class="photo-watermark" aria-hidden="true"><strong>© Evan Lowe</strong><small>@evantoocool99</small></span></figure>
+            <figure class="gallery-slide"><img src="asset-120.jpg" alt="Macro and nature photograph 31 of 50"><span class="photo-watermark" aria-hidden="true"><strong>© Evan Lowe</strong><small>@evantoocool99</small></span></figure>
+            <figure class="gallery-slide"><img src="asset-121.jpg" alt="Macro and nature photograph 32 of 50"><span class="photo-watermark" aria-hidden="true"><strong>© Evan Lowe</strong><small>@evantoocool99</small></span></figure>
+            <figure class="gallery-slide"><img src="asset-038.jpg" alt="Macro and nature photograph 33 of 50"><span class="photo-watermark" aria-hidden="true"><strong>© Evan Lowe</strong><small>@evantoocool99</small></span></figure>
+            <figure class="gallery-slide"><img src="asset-122.jpg" alt="Macro and nature photograph 34 of 50"><span class="photo-watermark" aria-hidden="true"><strong>© Evan Lowe</strong><small>@evantoocool99</small></span></figure>
+            <figure class="gallery-slide"><img src="asset-123.jpg" alt="Macro and nature photograph 35 of 50"><span class="photo-watermark" aria-hidden="true"><strong>© Evan Lowe</strong><small>@evantoocool99</small></span></figure>
+            <figure class="gallery-slide"><img src="asset-026.jpg" alt="Macro and nature photograph 36 of 50"><span class="photo-watermark" aria-hidden="true"><strong>© Evan Lowe</strong><small>@evantoocool99</small></span></figure>
+            <figure class="gallery-slide"><img src="asset-124.jpg" alt="Macro and nature photograph 37 of 50"><span class="photo-watermark" aria-hidden="true"><strong>© Evan Lowe</strong><small>@evantoocool99</small></span></figure>
+            <figure class="gallery-slide"><img src="asset-125.jpg" alt="Macro and nature photograph 38 of 50"><span class="photo-watermark" aria-hidden="true"><strong>© Evan Lowe</strong><small>@evantoocool99</small></span></figure>
+            <figure class="gallery-slide"><img src="asset-126.jpg" alt="Macro and nature photograph 39 of 50"><span class="photo-watermark" aria-hidden="true"><strong>© Evan Lowe</strong><small>@evantoocool99</small></span></figure>
+            <figure class="gallery-slide"><img src="asset-127.jpg" alt="Macro and nature photograph 40 of 50"><span class="photo-watermark" aria-hidden="true"><strong>© Evan Lowe</strong><small>@evantoocool99</small></span></figure>
+            <figure class="gallery-slide"><img src="asset-128.jpg" alt="Macro and nature photograph 41 of 50"><span class="photo-watermark" aria-hidden="true"><strong>© Evan Lowe</strong><small>@evantoocool99</small></span></figure>
+            <figure class="gallery-slide"><img src="asset-129.jpg" alt="Macro and nature photograph 42 of 50"><span class="photo-watermark" aria-hidden="true"><strong>© Evan Lowe</strong><small>@evantoocool99</small></span></figure>
+            <figure class="gallery-slide"><img src="asset-130.jpg" alt="Macro and nature photograph 43 of 50"><span class="photo-watermark" aria-hidden="true"><strong>© Evan Lowe</strong><small>@evantoocool99</small></span></figure>
+            <figure class="gallery-slide"><img src="asset-131.jpg" alt="Macro and nature photograph 44 of 50"><span class="photo-watermark" aria-hidden="true"><strong>© Evan Lowe</strong><small>@evantoocool99</small></span></figure>
+            <figure class="gallery-slide"><img src="asset-132.jpg" alt="Macro and nature photograph 45 of 50"><span class="photo-watermark" aria-hidden="true"><strong>© Evan Lowe</strong><small>@evantoocool99</small></span></figure>
+            <figure class="gallery-slide"><img src="asset-133.jpg" alt="Macro and nature photograph 46 of 50"><span class="photo-watermark" aria-hidden="true"><strong>© Evan Lowe</strong><small>@evantoocool99</small></span></figure>
+            <figure class="gallery-slide"><img src="asset-134.jpg" alt="Macro and nature photograph 47 of 50"><span class="photo-watermark" aria-hidden="true"><strong>© Evan Lowe</strong><small>@evantoocool99</small></span></figure>
+            <figure class="gallery-slide"><img src="asset-135.jpg" alt="Macro and nature photograph 48 of 50"><span class="photo-watermark" aria-hidden="true"><strong>© Evan Lowe</strong><small>@evantoocool99</small></span></figure>
+            <figure class="gallery-slide"><img src="asset-136.jpg" alt="Macro and nature photograph 49 of 50"><span class="photo-watermark" aria-hidden="true"><strong>© Evan Lowe</strong><small>@evantoocool99</small></span></figure>
+            <figure class="gallery-slide"><img src="asset-137.jpg" alt="Macro and nature photograph 50 of 50"><span class="photo-watermark" aria-hidden="true"><strong>© Evan Lowe</strong><small>@evantoocool99</small></span></figure>
+          </div>
+          <button class="gallery-arrow gallery-prev" type="button" aria-label="Previous photograph"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 5-7 7 7 7"/></svg></button>
+          <button class="gallery-arrow gallery-next" type="button" aria-label="Next photograph"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 7 7-7 7"/></svg></button>
+        </div>
+        <div class="gallery-controls">
+          <span class="gallery-status" aria-live="polite">01 / 50</span>
+          <div class="gallery-progress" aria-hidden="true"><span></span></div>
+          <span class="gallery-hint">Swipe or use arrows</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="about-wrap" id="about" aria-labelledby="about-title">
+      <div class="section portrait-about">
+        <div class="section-head">
+          <div><p class="section-label">Behind the camera</p><h2 id="about-title">About Evan</h2></div>
+        </div>
+        <img class="about-photo" src="asset-138.jpg" alt="Portrait of Evan Lowe outdoors beside a pond with two sunlit feathers tucked into his cap">
+        <p class="about-bio">Evan Lowe is an adventure and wildlife photographer. After a career in software engineering, he traded the desk for the field — now he spends his days in the woods and wetlands with an iPhone, photographing insects, wildlife, and wildflowers. Just a guy with a camera and a dream.</p>
+      </div>
+    </section>
+
+    <section class="fieldnotes-wrap" id="field-notes" aria-labelledby="field-notes-title">
+      <div class="section">
+        <div class="section-head">
+          <div><p class="section-label">Field notes</p><h2 id="field-notes-title">Butterfly Photography 101</h2></div>
+          <span class="section-count">Seven field rules</span>
+        </div>
+        <p class="fieldnotes-lede"><strong>My field rules. Learned out there, not from a book.</strong> At first, it was luck. Now it's a skill.</p>
+        <ol class="rule-list">
+          <li class="rule">
+            <span class="rule-num" aria-hidden="true">1</span>
+            <div>
+              <h3>Hunt the bush lines by businesses — never busy roads.</h3>
+              <p>Butterflies hate car noise and wind; it bothers their sensors. Wasps, bees, and spiders don't care, but butterflies do. The quiet business lines are where they are.</p>
+            </div>
+          </li>
+          <li class="rule">
+            <span class="rule-num" aria-hidden="true">2</span>
+            <div>
+              <h3>The sun has to hit the line.</h3>
+              <p>Morning sun must be <em>on</em> the bushes. Butterflies and dragonflies bask in it to warm up — while they're cold and slow, that's your window. Spread wings means basking. That's when you can walk right up.</p>
+            </div>
+          </li>
+          <li class="rule">
+            <span class="rule-num" aria-hidden="true">3</span>
+            <div>
+              <h3>Hunt the same hour as the birds.</h3>
+              <p>The birds work those same lines at the same hour, because they know the insects are waking up slow. If the birds are hunting, you're in the right place at the right time.</p>
+            </div>
+          </li>
+          <li class="rule">
+            <span class="rule-num" aria-hidden="true">4</span>
+            <div>
+              <h3>Work the perch.</h3>
+              <p>A territorial butterfly owns a spot. It'll let you get close — and even if you scare it off, stand there and it comes right back to the same spot. Some of my best pictures happened because I just waited at the perch.</p>
+            </div>
+          </li>
+          <li class="rule">
+            <span class="rule-num" aria-hidden="true">5</span>
+            <div>
+              <h3>Wear the hat.</h3>
+              <p>Territorial butterflies react to the colors of my special hat — hackberry emperors and buckeyes especially, they'll come right at it. Didn't read that anywhere. Learned it out there.</p>
+            </div>
+          </li>
+          <li class="rule">
+            <span class="rule-num" aria-hidden="true">6</span>
+            <div>
+              <h3>Shoot the light through the wings.</h3>
+              <p>For a cold basking butterfly, walk around to the other side of its wings and let the sun shine straight through. Share the plain front frame <em>and</em> the backlit frame — that's the proof. No filter, no edit.</p>
+            </div>
+          </li>
+          <li class="rule">
+            <span class="rule-num" aria-hidden="true">7</span>
+            <div>
+              <h3>When they give you the frames, take them.</h3>
+              <p>A cooperative subject won't wait. When you do, you take the damn shots.</p>
+            </div>
+          </li>
+        </ol>
+        <div class="fieldnotes-foot">
+          <p class="fieldnotes-date">October 20, 2026 — first draft, revise as I learn more.</p>
+          <a class="fieldnotes-download" href="butterfly-photography-101.md" download>Download the field notes (.md)</a>
+        </div>
+      </div>
+    </section>
+
+    <section class="prints-wrap" aria-labelledby="prints-title">
+      <div class="section prints">
+        <div>
+          <p class="section-label">Available to collect</p>
+          <h2 id="prints-title">Limited Edition Prints</h2>
+          <p class="prints-intro">Every photograph is produced as a <strong>museum-grade giclée</strong>, individually numbered in an exclusive edition of 50.</p>
+        </div>
+        <div>
+          <div class="price-list" aria-label="Print sizes and prices">
+            <div class="price-row"><span class="print-size">8 × 10 in.</span><span class="print-price">$100</span></div>
+            <div class="price-row"><span class="print-size">11 × 14 in.</span><span class="print-price">$200</span></div>
+            <div class="price-row"><span class="print-size">16 × 20 in.</span><span class="print-price">$350</span></div>
+          </div>
+          <p class="edition-note">Only 50 impressions of each photograph will be released across all sizes.</p>
+          <p class="inquiry">Inquire or purchase via Instagram DM.</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer id="contact">
+    <div class="footer-inner"><div class="follow"><strong>Follow on Instagram</strong></div><p class="copyright">© 2026</p></div>
+  </footer>
+
+  <script>
+    (function(){
+      var galleries=Array.prototype.slice.call(document.querySelectorAll('.gallery-wrap'));
+
+      galleries.forEach(function(gallery){
+        var viewport=gallery.querySelector('.gallery-viewport');
+        var slides=Array.prototype.slice.call(viewport.querySelectorAll('.gallery-slide'));
+        var previous=gallery.querySelector('.gallery-prev');
+        var next=gallery.querySelector('.gallery-next');
+        var status=gallery.querySelector('.gallery-status');
+        var progress=gallery.querySelector('.gallery-progress span');
+        var active=0;
+        var scrollTimer;
+
+        function show(index){
+          active=(index+slides.length)%slides.length;
+          viewport.scrollTo({left:slides[active].offsetLeft,behavior:'smooth'});
+          update();
+        }
+        function update(){
+          status.textContent=String(active+1).padStart(2,'0')+' / '+slides.length;
+          progress.style.transform='scaleX('+(active+1)+')';
+        }
+        function nearestSlide(){
+          var width=viewport.clientWidth||1;
+          active=Math.max(0,Math.min(slides.length-1,Math.round(viewport.scrollLeft/width)));
+          update();
+        }
+
+        previous.addEventListener('click',function(){show(active-1)});
+        next.addEventListener('click',function(){show(active+1)});
+        viewport.addEventListener('scroll',function(){
+          window.clearTimeout(scrollTimer);
+          scrollTimer=window.setTimeout(nearestSlide,80);
+        },{passive:true});
+        viewport.addEventListener('keydown',function(event){
+          if(event.key==='ArrowLeft'){event.preventDefault();show(active-1)}
+          if(event.key==='ArrowRight'){event.preventDefault();show(active+1)}
+        });
+        window.addEventListener('resize',nearestSlide,{passive:true});
+        update();
+      });
+    }());
+  </script>
+</body>
+</html>
