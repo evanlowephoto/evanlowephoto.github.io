@@ -58,6 +58,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Ar
 .pic-bubble{align-self:flex-end;max-width:82%;display:flex;flex-direction:column;gap:6px;align-items:flex-end}
 .pic-bubble img{max-width:100%;max-height:260px;border-radius:16px;border-bottom-right-radius:6px;display:block;object-fit:cover;cursor:zoom-in}
 .pic-bubble .cap{background:var(--blue);color:#fff;padding:9px 12px;border-radius:18px;border-bottom-right-radius:6px;font-size:14.5px;line-height:1.4}
+.local-tags{align-self:flex-end;background:var(--surface2);border:1px solid var(--line);color:var(--muted);border-radius:12px;padding:5px 10px;font-size:12.5px;line-height:1.35;max-width:100%}
 
 .typing{align-self:flex-start;background:var(--gray-bubble);border-radius:18px;border-bottom-left-radius:6px;padding:12px 14px;display:none;gap:5px}
 .typing.show{display:flex}
@@ -167,7 +168,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Ar
       <span class="conn-pill" id="connPill"><span class="conn-dot"></span><span id="connText">Not connected — demo mode</span></span>
       <button class="kbtn danger" id="disconnectBtn" type="button" style="display:none">Disconnect &amp; forget key</button>
     </div>
-    <p class="key-note"><strong>Where the key lives:</strong> in this tab's memory only — never saved, wiped on refresh. Pictures you attach are resized in your browser and sent only to the Llama API, as part of your message.</p>
+    <p class="key-note"><strong>Where the key lives:</strong> in this tab's memory only — never saved, wiped on refresh. Pictures you attach are resized in your browser and sent only to the Llama API, as part of your message. With no key connected, attached pictures instead get quick tags from a small vision model that runs on this device — the picture is not uploaded for tagging, and the tags are generic labels, not an identification.</p>
   </section>
 </div>
 
@@ -187,7 +188,7 @@ var attachStrip=document.getElementById('attachStrip');
 var lightbox=document.getElementById('lightbox');
 var lightboxImg=document.getElementById('lightboxImg');
 var replies=["Got it — I've updated the deck and put consumer experience first.","Done. Want me to share that with the team?","On it. I'll check back in when it's ready.","Yep, noted. Anything else you want changed?"];
-var picReplies=["Nice shot — got it. In demo mode I can't actually see the picture, but connect a Llama key below and I'll really look at it.","Picture received. Connect your Llama key and ask me about it — Scout and Maverick can see images.","Got your picture. With a Llama key connected, I can describe it, ID what's in it, or pull text out of it."];
+var picReplies=["Got it. The quick tags under your picture come from a small model running on this device — generic labels only, not an ID. Connect a Llama key below and I'll really look at it.","Picture received. Quick tags are on-device and generic; with a Llama key connected, Scout or Maverick can actually see the picture and answer about it.","Got your picture — quick tags are underneath it. For a real look (species, details, text in the shot), connect your Llama key and ask me about it."];
 var replyIdx=0,picReplyIdx=0;
 var pendingPics=[]; // data URLs waiting to be sent
 function scrollThread(){messagesEl.scrollTop=messagesEl.scrollHeight}
@@ -225,6 +226,59 @@ function addPictureBubble(pics,caption){
   });
   if(caption){var cap=document.createElement('div');cap.className='cap';cap.textContent=caption;wrap.appendChild(cap)}
   messagesEl.insertBefore(wrap,typingEl);scrollThread();
+  return wrap;
+}
+
+/* ---- Local quick tags: a small on-device vision model (COCO-SSD on TensorFlow.js).
+   Runs entirely in the browser, no key, no server. Generic object labels only —
+   never presented as a species ID. Library + weights load lazily on first use. ---- */
+var tagModelPromise=null;
+function loadScriptOnce(src){
+  return new Promise(function(resolve,reject){
+    var s=document.createElement('script');s.src=src;
+    s.onload=function(){resolve()};
+    s.onerror=function(){reject(new Error('script load failed'))};
+    document.head.appendChild(s);
+  });
+}
+function ensureTagModel(){
+  if(!tagModelPromise){
+    tagModelPromise=loadScriptOnce('https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.22.0/dist/tf.min.js')
+      .then(function(){return loadScriptOnce('https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd@2.2.3/dist/coco-ssd.min.js')})
+      .then(function(){return cocoSsd.load({base:'lite_mobilenet_v2'})});
+  }
+  return tagModelPromise;
+}
+function tagOne(src){
+  return ensureTagModel().then(function(model){
+    return new Promise(function(resolve,reject){
+      var img=new Image();
+      img.onload=function(){
+        model.detect(img).then(function(preds){
+          var seen={},labels=[];
+          (preds||[]).forEach(function(p){if(p.score>=0.5&&!seen[p.class]){seen[p.class]=1;labels.push(p.class)}});
+          resolve(labels.slice(0,5));
+        },reject);
+      };
+      img.onerror=function(){reject(new Error('image load failed'))};
+      img.src=src;
+    });
+  });
+}
+function tagPictures(wrap,pics){
+  var imgs=wrap.querySelectorAll('img');
+  pics.forEach(function(src,i){
+    var tag=document.createElement('div');tag.className='local-tags';tag.textContent='Quick tags (on-device): tagging…';
+    var anchor=imgs[i];
+    if(anchor&&anchor.parentNode===wrap&&anchor.nextSibling){wrap.insertBefore(tag,anchor.nextSibling)}else{wrap.appendChild(tag)}
+    tagOne(src).then(function(labels){
+      tag.textContent=labels.length?('Quick tags (on-device): '+labels.join(' · ')):'Quick tags (on-device): nothing recognized';
+      scrollThread();
+    }).catch(function(){
+      tag.textContent='Quick tags unavailable — the on-device model could not load (first use needs a connection).';
+      scrollThread();
+    });
+  });
 }
 
 /* ---- Picture attach: pick, paste, or drop. Resized in-browser before sending. ---- */
@@ -365,9 +419,11 @@ document.getElementById('composer').addEventListener('submit',function(e){
   var t=inputEl.value.trim();
   var pics=pendingPics.slice();
   if(!t&&!pics.length)return;
-  if(pics.length)addPictureBubble(pics,t);else addBubble(t,'out');
+  var picWrap=null;
+  if(pics.length)picWrap=addPictureBubble(pics,t);else addBubble(t,'out');
   inputEl.value='';pendingPics=[];renderAttachStrip();
   if(!conn){
+    if(pics.length&&picWrap)tagPictures(picWrap,pics);
     setWorking(true);
     setTimeout(function(){
       setWorking(false);
