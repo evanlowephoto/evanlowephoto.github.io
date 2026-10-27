@@ -60,6 +60,30 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Ar
 .pic-bubble .cap{background:var(--blue);color:#fff;padding:9px 12px;border-radius:18px;border-bottom-right-radius:6px;font-size:14.5px;line-height:1.4}
 .local-tags{align-self:flex-end;background:var(--surface2);border:1px solid var(--line);color:var(--muted);border-radius:12px;padding:5px 10px;font-size:12.5px;line-height:1.35;max-width:100%}
 
+/* Vision report card — multi-model on-device analysis */
+.vision-card{align-self:flex-end;width:100%;max-width:100%;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:10px 12px;text-align:left;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+.vision-head{display:flex;align-items:center;gap:7px;font-size:12px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:var(--text);margin-bottom:7px}
+.vision-head .vdot{width:7px;height:7px;border-radius:50%;background:#f59e0b;flex:0 0 auto;animation:pulse 1s infinite}
+.vision-head.done .vdot{background:#22c55e;animation:none}
+.vision-row{display:flex;gap:8px;padding:5px 0;border-top:1px solid var(--line);font-size:12.5px;line-height:1.4}
+.vision-row:first-of-type{border-top:none}
+.vname{flex:0 0 118px;font-weight:700;color:var(--text)}
+.vval{flex:1;color:var(--muted);word-break:break-word}
+.vval.ok{color:var(--text)}
+.vval.err{color:#b3261e}
+@media (prefers-color-scheme: dark){.vval.err{color:#ff9d94}}
+.vision-card img.annotated{max-width:100%;max-height:220px;border-radius:10px;display:block;object-fit:contain;margin-top:7px;cursor:zoom-in}
+.vision-foot{margin-top:7px;font-size:11.5px;color:var(--muted);line-height:1.45}
+.cand-list{display:flex;flex-direction:column;gap:3px}
+.cand-item{line-height:1.35}
+.cand-item b{color:var(--text)}
+.cand-note{font-size:11.5px;color:var(--muted);line-height:1.4;margin-top:2px}
+.phase-groups{display:grid;grid-template-columns:1fr;gap:10px;margin-top:4px}
+.phase-group{border:1px solid var(--line);background:var(--surface2);border-radius:12px;padding:11px 12px}
+.phase-group h3{margin:0 0 3px;font-size:13.5px}
+.phase-group p{margin:0;font-size:12.5px;color:var(--muted);line-height:1.5}
+.phase-group p strong{color:var(--text)}
+
 .typing{align-self:flex-start;background:var(--gray-bubble);border-radius:18px;border-bottom-left-radius:6px;padding:12px 14px;display:none;gap:5px}
 .typing.show{display:flex}
 .typing i{width:7px;height:7px;border-radius:50%;background:#8e8e93;display:block;animation:blink 1.2s infinite}
@@ -81,6 +105,32 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Ar
 .send-btn{width:40px;height:40px;border-radius:50%;background:var(--blue);color:#fff;border:none;display:grid;place-items:center;cursor:pointer;flex:0 0 auto}
 .send-btn svg{width:18px;height:18px}
 .send-btn:disabled{opacity:.55;cursor:wait}
+
+/* VOICE — Alexa-style talk-back + Whisper */
+.voice-bar{display:flex;flex-wrap:wrap;gap:7px;align-items:center;padding:9px 12px 2px}
+.voice-label{font-size:12px;font-weight:800;letter-spacing:.03em;text-transform:uppercase;color:var(--muted)}
+.voice-select{flex:1;min-width:150px;border:1px solid var(--line);background:var(--surface2);color:var(--text);border-radius:999px;padding:7px 10px;font-size:13px;font-weight:600;outline:none}
+.voice-select:focus{border-color:var(--blue)}
+.voice-toggle{border:1px solid var(--line);background:var(--surface);color:var(--text);padding:7px 11px;border-radius:999px;font-size:12.5px;font-weight:700;cursor:pointer;white-space:nowrap}
+.voice-toggle.on{background:var(--blue);border-color:var(--blue);color:#fff}
+.voice-status{display:flex;gap:7px;align-items:flex-start;padding:5px 14px 7px;font-size:12px;line-height:1.4;color:var(--muted)}
+.rec-dot{width:7px;height:7px;border-radius:50%;background:#9aa3af;flex:0 0 auto;margin-top:5px}
+.voice-status.listening{color:var(--text)} .voice-status.listening .rec-dot{background:#ff3b30;animation:pulse 1s infinite}
+.voice-status.working{color:var(--text)} .voice-status.working .rec-dot{background:#f59e0b;animation:pulse 1s infinite}
+.voice-status.done .rec-dot{background:#22c55e}
+.mic-btn{width:40px;height:40px;border-radius:50%;border:1px solid var(--line);background:var(--surface);color:var(--text);display:grid;place-items:center;cursor:pointer;flex:0 0 auto}
+.mic-btn svg{width:19px;height:19px}
+.mic-btn:hover{border-color:var(--blue);color:var(--blue)}
+.mic-btn.recording{background:#ff3b30;border-color:#ff3b30;color:#fff;animation:pulse 1.1s infinite}
+.mic-btn.busy{opacity:.6;cursor:wait}
+.mic-btn:disabled{opacity:.55;cursor:wait}
+.transcript-tag{align-self:flex-end;background:var(--surface2);border:1px solid var(--line);color:var(--muted);border-radius:999px;padding:3px 9px;font-size:11.5px;font-weight:600}
+.voice-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+.voice-chip{border:1px solid var(--line);background:var(--surface2);border-radius:12px;padding:9px 11px;text-align:left;cursor:pointer;color:var(--text)}
+.voice-chip b{display:block;font-size:13.5px;line-height:1.2}
+.voice-chip span{font-size:12px;color:var(--muted);line-height:1.35;display:block;margin-top:2px}
+.voice-chip.active{border-color:var(--blue);background:var(--surface);box-shadow:0 0 0 1px var(--blue) inset}
+@media (max-width:420px){.voice-grid{grid-template-columns:1fr}}
 
 /* KEY PANEL */
 .keypanel{margin-top:16px;background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:16px}
@@ -127,6 +177,13 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Ar
       <div class="status-pill" id="statusPill"><span class="status-dot"></span><span id="statusText">Ready</span></div>
       <div class="status-pill" id="modePill"><span id="modeText">Demo mode · canned replies</span></div>
     </div>
+    <div class="voice-bar" aria-label="Voice controls">
+      <span class="voice-label" id="voiceLabel">Voice</span>
+      <select class="voice-select" id="voiceSelect" aria-labelledby="voiceLabel"></select>
+      <button type="button" class="voice-toggle on" id="speakToggle" aria-pressed="true">Speak replies · On</button>
+      <button type="button" class="voice-toggle" id="testVoiceBtn">Test voice</button>
+    </div>
+    <div class="voice-status" id="voiceStatus"><span class="rec-dot" id="recDot"></span><span id="voiceStatusText">Tap the mic, talk, tap again to send — Whisper transcribes on this device, in short chunks (near-real-time, not word-by-word streaming).</span></div>
     <div class="time-label">Today 9:15 AM</div>
 
     <div class="messages" id="messages">
@@ -139,9 +196,37 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Ar
       <button type="button" class="attach-btn" id="attachBtn" aria-label="Attach a picture" title="Attach a picture">＋</button>
       <input id="fileInput" type="file" accept="image/*" multiple hidden>
       <input id="input" type="text" placeholder="Message Echo…" autocomplete="off" aria-label="Message">
+      <button type="button" class="mic-btn" id="micBtn" aria-label="Talk with your voice — tap to start, tap again to stop and transcribe" title="Talk — Whisper transcription"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10a7 7 0 0 0 14 0M12 19v3"/></svg></button>
       <button class="send-btn" type="submit" aria-label="Send"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg></button>
     </form>
   </div>
+
+  <section class="keypanel" aria-label="Voice — talk to Echo and hear replies">
+    <h2>Talk to Echo — Whisper in, voice out</h2>
+    <p class="sub">Tap the mic in the chat, speak, tap again. OpenAI's Whisper (the tiny English model, via Transformers.js / Hugging Face) transcribes right in your browser — your voice is not uploaded for transcription. Echo's reply is then spoken back in the voice you pick. Six generic voices, female to male:</p>
+    <div class="voice-grid" id="voiceGrid"></div>
+    <p class="key-note"><strong>How the six voices work:</strong> each preset first tries to match a matching voice already on your device (for example a female or male system voice), then shapes it with pitch and pace — so the same six settings sound a little different on every phone and computer. First talk downloads Whisper once (~40 MB) and your browser caches it. Mic access needs your permission, and if this browser has no mic or no speech voices, the buttons say so instead of pretending.</p>
+  </section>
+
+  <section class="keypanel" aria-label="Phase 0 — CLIP field label lists">
+    <h2>Phase 0 — CLIP matched against your field lists</h2>
+    <p class="sub">No training, no new weights. The CLIP row in every vision report now classifies against label lists built from your own archive and your confirmed IDs, instead of generic subjects. Each class is scored with 8 prompt templates (“a photo of a…”, “a close-up macro photo of a…”, “a wild … in nature”, “a … in Indiana”, and four more), the scores are averaged, and the top 5 are shown with scores — worded as <strong>candidates, not an identification</strong>, every time. Common names lead; the scientific name and a short visual phrase sit alongside.</p>
+    <div class="phase-groups">
+      <div class="phase-group">
+        <h3>Butterflies — 18</h3>
+        <p>The 17 species from your Best of Butterflies archive, plus the <strong>Eastern Tailed-Blue</strong> from the October 21 carousel session (your confirmed ID). Best-read marks stay on the <strong>Sachem</strong> and <strong>Peck's Skipper</strong> — your word overrules them. <strong>Question Mark</strong> stays confirmed and <strong>Eastern Comma</strong> stays corrected; <strong>Duskywing</strong> stays at genus level.</p>
+      </div>
+      <div class="phase-group">
+        <h3>Insects — 10</h3>
+        <p>Your confirmed IDs: western conifer seed bug, green stink bug, mason / potter wasp, northern paper wasp, <strong><em>Ancistrocerus antilope</em></strong>, western honeybee, Carolina mantis, tarnished plant bug, corn earworm moth, and flower weevil (generic — no species claimed). Carolina mantis carries its common name only.</p>
+      </div>
+      <div class="phase-group">
+        <h3>Fungi — 4, genus / family level + your named giants</h3>
+        <p>Artist's conk (<em>Ganoderma applanatum</em> <strong>complex</strong>), blushing bracket, dryad's saddle, and shaggy mane. <strong>Blushing bracket is verified only for the base bracket of the tower tree</strong> — the tower shelves above it are unverified and are never labeled blushing bracket. Fungi candidates never carry edibility language. The hedged finds stay out of v1 entirely: the Fuligo crust, the Stemonitis-type slime mold, the little brown mushroom, and the agarikon long form.</p>
+      </div>
+    </div>
+    <p class="key-note"><strong>Holdout rule:</strong> measurement uses your confirmed-ID photos from outside the archive roster (corn earworm, seed bug, stink bug, mason wasp, paper wasp, and the rest). A picture counts as a hit only if its correct label appears in the top 5 — a miss gets reported, never silently folded into the lists. The fungi holdout stays thin until the mushroom curation session, and the report will say so rather than pad it.</p>
+  </section>
 
   <section class="keypanel" aria-label="Connect a real model with your own API key">
     <h2>Make it a real LLM — your Llama API key</h2>
@@ -168,7 +253,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Ar
       <span class="conn-pill" id="connPill"><span class="conn-dot"></span><span id="connText">Not connected — demo mode</span></span>
       <button class="kbtn danger" id="disconnectBtn" type="button" style="display:none">Disconnect &amp; forget key</button>
     </div>
-    <p class="key-note"><strong>Where the key lives:</strong> in this tab's memory only — never saved, wiped on refresh. Pictures you attach are resized in your browser and sent only to the Llama API, as part of your message. With no key connected, attached pictures instead get quick tags from a small vision model that runs on this device — the picture is not uploaded for tagging, and the tags are generic labels, not an identification.</p>
+    <p class="key-note"><strong>Where the key lives:</strong> in this tab's memory only — never saved, wiped on refresh. Pictures you attach are resized in your browser and sent only to the Llama API, as part of your message. Attached pictures also get a vision report from six open-source models that run on this device — COCO-SSD quick tags (TensorFlow.js) plus five Hugging Face models via Transformers.js: a ViT classifier, a DETR detector that draws boxes, a ViT-GPT2 captioner, CLIP zero-shot matching (Phase 0: scored against the field label lists above with 8 prompt templates per class, top 5 shown), and OwlViT zero-shot detection. Each model downloads from its public CDN/Hugging Face repo on first use and is then cached by your browser; the picture itself is not uploaded for local analysis. The other models return generic labels, and CLIP's field-list matches are candidates, not an identification. Voice is separate: Whisper transcription runs on-device, and only the transcribed text follows the normal chat path above (demo reply, or the Llama API when connected).</p>
   </section>
 </div>
 
@@ -188,7 +273,7 @@ var attachStrip=document.getElementById('attachStrip');
 var lightbox=document.getElementById('lightbox');
 var lightboxImg=document.getElementById('lightboxImg');
 var replies=["Got it — I've updated the deck and put consumer experience first.","Done. Want me to share that with the team?","On it. I'll check back in when it's ready.","Yep, noted. Anything else you want changed?"];
-var picReplies=["Got it. The quick tags under your picture come from a small model running on this device — generic labels only, not an ID. Connect a Llama key below and I'll really look at it.","Picture received. Quick tags are on-device and generic; with a Llama key connected, Scout or Maverick can actually see the picture and answer about it.","Got your picture — quick tags are underneath it. For a real look (species, details, text in the shot), connect your Llama key and ask me about it."];
+var picReplies=["Got it — the vision report under your picture is six open-source models running together on this device: quick tags, a classifier, a detector that draws boxes, a captioner, and two zero-shot models. The CLIP row now matches against your Phase 0 field lists — top-5 candidates with scores, not an identification. Connect a Llama key below and I'll really look at it.","Picture received. The report underneath runs six on-device vision models at once — tags, labels, boxes, a caption, and zero-shot matches, with CLIP scoring your own butterfly, insect, and fungi lists as candidates. With a Llama key connected, Scout or Maverick can also see the picture and answer about it.","Got your picture — six local models are reading it in the report below, no upload, no key. For a real look (species, details, text in the shot), connect your Llama key and ask me about it."];
 var replyIdx=0,picReplyIdx=0;
 var pendingPics=[]; // data URLs waiting to be sent
 function scrollThread(){messagesEl.scrollTop=messagesEl.scrollHeight}
@@ -229,9 +314,21 @@ function addPictureBubble(pics,caption){
   return wrap;
 }
 
-/* ---- Local quick tags: a small on-device vision model (COCO-SSD on TensorFlow.js).
-   Runs entirely in the browser, no key, no server. Generic object labels only —
-   never presented as a species ID. Library + weights load lazily on first use. ---- */
+/* ---- Multi-model on-device vision: six open-source models run together on every
+   picture, entirely in the browser — no key, no server, picture never uploaded.
+   1) COCO-SSD (TensorFlow.js) — quick object tags.
+   2) ViT classifier (Transformers.js / Hugging Face) — top scene labels.
+   3) DETR detector — objects with scores, plus boxes drawn on a copy of the picture.
+   4) ViT-GPT2 captioner — a full-sentence caption.
+   5) CLIP zero-shot — Phase 0: matches the picture against Evan's own field
+      label lists (18 butterflies, 10 insects, 4 fungi) with 8 prompt templates
+      per class, scores averaged, top 5 shown as candidates.
+   6) OwlViT zero-shot detector — finds named subjects in the open vocabulary.
+   Every model loads lazily on first use and reports into its own row, so one
+   model's failure never blocks or fakes another's result. All model output is
+   written with textContent / DOM nodes — never as HTML. CLIP field matches are
+   candidates, never a definitive identification, and fungi candidates never
+   carry edibility language. ---- */
 var tagModelPromise=null;
 function loadScriptOnce(src){
   return new Promise(function(resolve,reject){
@@ -265,19 +362,283 @@ function tagOne(src){
     });
   });
 }
-function tagPictures(wrap,pics){
-  var imgs=wrap.querySelectorAll('img');
-  pics.forEach(function(src,i){
-    var tag=document.createElement('div');tag.className='local-tags';tag.textContent='Quick tags (on-device): tagging…';
-    var anchor=imgs[i];
-    if(anchor&&anchor.parentNode===wrap&&anchor.nextSibling){wrap.insertBefore(tag,anchor.nextSibling)}else{wrap.appendChild(tag)}
-    tagOne(src).then(function(labels){
-      tag.textContent=labels.length?('Quick tags (on-device): '+labels.join(' · ')):'Quick tags (on-device): nothing recognized';
-      scrollThread();
-    }).catch(function(){
-      tag.textContent='Quick tags unavailable — the on-device model could not load (first use needs a connection).';
-      scrollThread();
+
+/* Transformers.js (v2 classic build) — hosts the five Hugging Face models. */
+var tfLibPromise=null;
+function loadTransformers(){
+  if(!tfLibPromise){
+    tfLibPromise=loadScriptOnce('https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.2/dist/transformers.min.js').then(function(){
+      var T=window.transformers;
+      if(!T||!T.pipeline)throw new Error('vision library did not load');
+      T.env.allowLocalModels=false;
+      return T;
     });
+  }
+  return tfLibPromise;
+}
+var pipePromises={};
+function getPipe(task,model){
+  var k=task+':'+model;
+  if(!pipePromises[k]){
+    pipePromises[k]=loadTransformers().then(function(T){return T.pipeline(task,model)});
+  }
+  return pipePromises[k];
+}
+function rawImageFromDataURL(src){
+  return loadTransformers().then(function(T){
+    return fetch(src).then(function(r){return r.blob()}).then(function(b){return T.RawImage.fromBlob(b)});
+  });
+}
+function pct(s){return Math.round(s*100)+'%'}
+/* ---- Phase 0 field label lists (v1) — built from Evan's archive and his
+   confirmed IDs. No training, no new weights: CLIP zero-shot scores each
+   picture against these classes with 8 prompt templates per class, averages
+   the scores, and shows the top 5 as candidates — never a definitive ID.
+   Common names lead; scientific name + one visual phrase sit alongside.
+   Best-read marks, the confirmed/corrected anglewings, the genus-level
+   duskywing, and the verified-base-only blushing bracket are preserved
+   exactly. Hedged fungi (Fuligo crust, Stemonitis-type slime mold, the little
+   brown mushroom, the agarikon long form) are excluded from v1 entirely. ---- */
+var FIELD_TEMPLATES=[
+  'a photo of a {}',
+  'a close-up macro photo of a {}',
+  'a wild {} in nature',
+  'a {} outdoors',
+  'a detailed photo of a {}',
+  'a {} in the field',
+  'a picture of a {}',
+  'a {} in Indiana'
+];
+var FIELD_CLASSES=[
+  /* Butterflies — 17 archive species + Eastern Tailed-Blue (carousel) */
+  {g:'Butterflies',name:'Sachem',sci:'Atalopedes campestris',p:'Sachem skipper butterfly, a small orange-brown skipper',note:'best read'},
+  {g:'Butterflies',name:'Monarch',sci:'Danaus plexippus',p:'Monarch butterfly, a large orange butterfly with black veins and white spots',note:''},
+  {g:'Butterflies',name:'Common Buckeye',sci:'Junonia coenia',p:'Common Buckeye butterfly, a brown butterfly with eyespots',note:''},
+  {g:'Butterflies',name:'Hackberry Emperor',sci:'Asterocampa celtis',p:'Hackberry Emperor butterfly, a brown emperor butterfly',note:''},
+  {g:'Butterflies',name:'Cabbage White',sci:'Pieris rapae',p:'Cabbage White butterfly, a small white butterfly with one or two forewing spots',note:''},
+  {g:'Butterflies',name:'Red-spotted Purple',sci:'Limenitis arthemis astyanax',p:'Red-spotted Purple butterfly, a dark blue-black butterfly with red spots',note:''},
+  {g:'Butterflies',name:'Summer Azure',sci:'Celastrina neglecta',p:'Summer Azure butterfly, a small powder-blue butterfly with a silvery underside',note:''},
+  {g:'Butterflies',name:'Great Spangled Fritillary',sci:'Speyeria cybele',p:'Great Spangled Fritillary butterfly, a large orange butterfly with silver spots',note:''},
+  {g:'Butterflies',name:"Peck's Skipper",sci:'Polites peckius',p:"Peck's Skipper butterfly, a small orange skipper",note:'best read'},
+  {g:'Butterflies',name:'Painted Lady',sci:'Vanessa cardui',p:'Painted Lady butterfly, an orange and black butterfly with white spots',note:''},
+  {g:'Butterflies',name:'Pearl Crescent',sci:'Phyciodes tharos',p:'Pearl Crescent butterfly, a small orange crescent butterfly',note:''},
+  {g:'Butterflies',name:'Clouded Sulphur',sci:'Colias philodice',p:'Clouded Sulphur butterfly, a yellow butterfly with green eyes',note:''},
+  {g:'Butterflies',name:'Red Admiral',sci:'Vanessa atalanta',p:'Red Admiral butterfly, a black butterfly with red bands',note:''},
+  {g:'Butterflies',name:'Question Mark',sci:'Polygonia interrogationis',p:'Question Mark butterfly, a dead-leaf brown butterfly with a silver question-mark on the underside',note:'confirmed'},
+  {g:'Butterflies',name:'Eastern Comma',sci:'Polygonia comma',p:'Eastern Comma butterfly, a dead-leaf brown butterfly with a silver comma mark on the underside',note:'corrected ID'},
+  {g:'Butterflies',name:'Duskywing',sci:'Erynnis sp.',p:'duskywing skipper butterfly, a dark brown skipper with wings held flat',note:'genus level'},
+  {g:'Butterflies',name:'Orange Sulphur',sci:'Colias eurytheme',p:'Orange Sulphur butterfly, an orange-yellow butterfly',note:''},
+  {g:'Butterflies',name:'Eastern Tailed-Blue',sci:'Cupido comyntas',p:'Eastern Tailed-Blue butterfly, a small blue butterfly with tiny tails, on white aster flowers',note:'confirmed'},
+  /* Insects — his confirmed IDs */
+  {g:'Insects',name:'Western conifer seed bug',sci:'Leptoglossus occidentalis',p:'western conifer seed bug, a leaf-footed bug with a white zigzag across its wings and flared leaf-shaped hind legs',note:''},
+  {g:'Insects',name:'Green stink bug',sci:'Chinavia hilaris',p:'green stink bug, a green shield-shaped bug',note:''},
+  {g:'Insects',name:'Mason / potter wasp',sci:'Eumeninae',p:'mason wasp, a solitary potter wasp',note:''},
+  {g:'Insects',name:'Northern paper wasp',sci:'Polistes fuscatus',p:'northern paper wasp',note:''},
+  {g:'Insects',name:'Ancistrocerus antilope',sci:'Ancistrocerus antilope',p:'Ancistrocerus antilope potter wasp, a black and yellow potter wasp',note:'his ID'},
+  {g:'Insects',name:'Western honeybee',sci:'Apis mellifera',p:'western honeybee, a honeybee worker',note:''},
+  {g:'Insects',name:'Carolina mantis',sci:'',p:'Carolina mantis, a praying mantis',note:''},
+  {g:'Insects',name:'Tarnished plant bug',sci:'Lygus lineolaris',p:'tarnished plant bug, a small mottled plant bug',note:''},
+  {g:'Insects',name:'Corn earworm moth',sci:'Helicoverpa zea',p:'corn earworm moth, a tan moth',note:'his ID'},
+  {g:'Insects',name:'Flower weevil',sci:'',p:'flower weevil, a small mottled weevil on flower buds',note:'generic — no species claimed'},
+  /* Fungi — genus / family level + his named giants. No edibility language, ever. */
+  {g:'Fungi',name:"Artist's conk",sci:'Ganoderma applanatum complex',p:"artist's conk fungus, a perennial shelf conk bracket on a dead hardwood trunk with brown spore dust",note:'complex'},
+  {g:'Fungi',name:'Blushing bracket',sci:'Daedaleopsis confragosa',p:'blushing bracket fungus, a bracket polypore shelf fungus on dead wood',note:'verified only for the base bracket of the tower tree — the tower shelves are unverified'},
+  {g:'Fungi',name:"Dryad's saddle",sci:'',p:"dryad's saddle fungus, a very large bracket fungus on a dead log",note:'his name'},
+  {g:'Fungi',name:'Shaggy mane',sci:'',p:'shaggy mane mushroom, a very tall white shaggy mushroom',note:'his name'}
+];
+function fieldPrompt(cls,tpl){
+  var subject=cls.p;
+  if(cls.sci&&cls.p.toLowerCase().indexOf(cls.sci.toLowerCase())===-1)subject+=' ('+cls.sci+')';
+  return tpl.replace('{}',subject);
+}
+function runFieldEnsemble(pipe,raw,onPass){
+  var totals=[],counts=[],i;
+  for(i=0;i<FIELD_CLASSES.length;i++){totals.push(0);counts.push(0)}
+  var chain=Promise.resolve(),passesDone=0;
+  FIELD_TEMPLATES.forEach(function(tpl,ti){
+    chain=chain.then(function(){
+      var labels=[],byLabel={};
+      FIELD_CLASSES.forEach(function(cls,ci){
+        var s=fieldPrompt(cls,tpl);labels.push(s);byLabel[s]=ci;
+      });
+      if(onPass)onPass(ti+1,FIELD_TEMPLATES.length);
+      return pipe(raw,labels).then(function(out){
+        (out||[]).forEach(function(o){
+          var ci=byLabel[o.label];
+          if(ci!==undefined&&typeof o.score==='number'){totals[ci]+=o.score;counts[ci]++}
+        });
+        passesDone++;
+      }).catch(function(){/* one failed template must not sink the ensemble */});
+    });
+  });
+  return chain.then(function(){
+    if(!passesDone)throw new Error('field ensemble failed');
+    var ranked=FIELD_CLASSES.map(function(cls,ci){
+      return {cls:cls,score:counts[ci]?totals[ci]/counts[ci]:0};
+    });
+    ranked.sort(function(a,b){return b.score-a.score});
+    return ranked.slice(0,5);
+  });
+}
+function renderFieldCandidates(v,top){
+  v.textContent='';v.classList.add('ok');
+  var wrap=document.createElement('div');wrap.className='cand-list';
+  var head=document.createElement('div');head.className='cand-item';
+  head.textContent='Candidates — not an identification (top 5 of '+FIELD_CLASSES.length+' field classes, 8-template average):';
+  wrap.appendChild(head);
+  top.forEach(function(r,i){
+    var item=document.createElement('div');item.className='cand-item';
+    var b=document.createElement('b');b.textContent=(i+1)+'. '+r.cls.name+' — '+pct(r.score);
+    item.appendChild(b);
+    var meta=' · '+r.cls.g+(r.cls.sci?(' · '+r.cls.sci):'')+(r.cls.note?(' · '+r.cls.note):'');
+    item.appendChild(document.createTextNode(meta));
+    wrap.appendChild(item);
+  });
+  var hasFungi=top.some(function(r){return r.cls.g==='Fungi'});
+  if(hasFungi){
+    var fn=document.createElement('div');fn.className='cand-note';
+    fn.textContent='Fungi candidates carry no edibility information — a real ID goes through lab work or a community ID record, not this score.';
+    wrap.appendChild(fn);
+  }
+  v.appendChild(wrap);
+}
+var OWL_LABELS=['butterfly','bee','wasp','mushroom','flower','bird','spider','dragonfly','beetle','moth'];
+function drawBoxes(src,dets,color){
+  return new Promise(function(resolve){
+    var img=new Image();
+    img.onload=function(){
+      var W=img.naturalWidth,H=img.naturalHeight;
+      var c=document.createElement('canvas');c.width=W;c.height=H;
+      var x=c.getContext('2d');x.drawImage(img,0,0);
+      var fs=Math.max(13,Math.round(W/26));
+      x.lineWidth=Math.max(2,Math.round(W/220));x.font='700 '+fs+'px sans-serif';
+      dets.forEach(function(d){
+        var b=d.box;if(!b)return;
+        x.strokeStyle=color;x.fillStyle=color;
+        x.strokeRect(b.xmin,b.ymin,b.xmax-b.xmin,b.ymax-b.ymin);
+        var label=d.label+' '+pct(d.score),tw=x.measureText(label).width+10,th=fs+8;
+        var ty=b.ymin-th<0?b.ymin:b.ymin-th;
+        x.fillRect(b.xmin,ty,tw,th);
+        x.fillStyle='#fff';x.fillText(label,b.xmin+5,ty+fs+1);
+      });
+      resolve(c.toDataURL('image/jpeg',0.85));
+    };
+    img.onerror=function(){resolve(null)};
+    img.src=src;
+  });
+}
+function analyzePictures(wrap,pics){
+  pics.forEach(function(src,pi){
+    var card=document.createElement('div');card.className='vision-card';
+    var head=document.createElement('div');head.className='vision-head';
+    var dot=document.createElement('span');dot.className='vdot';
+    var htxt=document.createElement('span');htxt.textContent='Vision report — 6 on-device models'+(pics.length>1?(' · picture '+(pi+1)):'');
+    head.appendChild(dot);head.appendChild(htxt);card.appendChild(head);
+    var rows={};
+    function addRow(key,name){
+      var r=document.createElement('div');r.className='vision-row';
+      var n=document.createElement('span');n.className='vname';n.textContent=name;
+      var v=document.createElement('span');v.className='vval';v.textContent='queued…';
+      r.appendChild(n);r.appendChild(v);card.appendChild(r);
+      rows[key]={row:r,val:v};
+      return v;
+    }
+    var vCoco=addRow('coco','COCO-SSD · tags');
+    var vVit=addRow('vit','ViT · classify');
+    var vDetr=addRow('detr','DETR · detect');
+    var vCap=addRow('cap','Caption · ViT-GPT2');
+    var vClip=addRow('clip','CLIP · Field lists');
+    var vOwl=addRow('owl','OwlViT · find');
+    var foot=document.createElement('div');foot.className='vision-foot';
+    foot.textContent='Open-source models running in your browser — first use downloads each one, then your browser caches it. Most labels are generic; the CLIP field-list row shows candidates from your Phase 0 lists, not an identification, and fungi candidates never carry edibility language.';
+    card.appendChild(foot);
+    wrap.appendChild(card);scrollThread();
+    var pending=6;
+    function doneOne(){pending--;if(pending<=0){head.classList.add('done')}scrollThread()}
+    function fail(v){return function(){v.textContent='unavailable — model could not load or run on this device (first use needs a connection).';v.classList.add('err');doneOne()}}
+    /* 1 — COCO-SSD quick tags */
+    vCoco.textContent='loading model…';
+    tagOne(src).then(function(labels){
+      vCoco.textContent=labels.length?labels.join(' · '):'nothing recognized';
+      if(labels.length)vCoco.classList.add('ok');
+      doneOne();
+    },fail(vCoco));
+    /* Shared RawImage for the five Transformers.js models */
+    var rawP=rawImageFromDataURL(src);
+    /* 2 — ViT image classification */
+    vVit.textContent='downloading model (first use)…';
+    rawP.then(function(raw){
+      return getPipe('image-classification','Xenova/vit-base-patch16-224').then(function(pipe){
+        vVit.textContent='running…';
+        return pipe(raw);
+      });
+    }).then(function(out){
+      var top=(out||[]).slice(0,3).map(function(o){return o.label.replace(/_/g,' ')+' '+pct(o.score)});
+      vVit.textContent=top.length?top.join(' · '):'no labels returned';
+      if(top.length)vVit.classList.add('ok');
+      doneOne();
+    }).catch(fail(vVit));
+    /* 3 — DETR object detection + drawn boxes */
+    vDetr.textContent='downloading model (first use)…';
+    rawP.then(function(raw){
+      return getPipe('object-detection','Xenova/detr-resnet-50').then(function(pipe){
+        vDetr.textContent='running…';
+        return pipe(raw);
+      });
+    }).then(function(out){
+      var dets=(out||[]).filter(function(o){return o.score>=0.5}).slice(0,6);
+      if(!dets.length){vDetr.textContent='no objects over 50% confidence';doneOne();return}
+      vDetr.textContent=dets.map(function(o){return o.label+' '+pct(o.score)}).join(' · ');
+      vDetr.classList.add('ok');
+      drawBoxes(src,dets,'#e8590c').then(function(annotated){
+        if(annotated){
+          var im=document.createElement('img');im.className='annotated';im.src=annotated;im.alt='Picture with detection boxes drawn by the DETR model';
+          im.addEventListener('click',function(){openLightbox(annotated)});
+          card.insertBefore(im,foot);scrollThread();
+        }
+        doneOne();
+      });
+    }).catch(fail(vDetr));
+    /* 4 — ViT-GPT2 captioning */
+    vCap.textContent='downloading model (first use)…';
+    rawP.then(function(raw){
+      return getPipe('image-to-text','Xenova/vit-gpt2-image-captioning').then(function(pipe){
+        vCap.textContent='running…';
+        return pipe(raw);
+      });
+    }).then(function(out){
+      var cap=out&&out[0]&&(out[0].generated_text||out[0].text)||'';
+      vCap.textContent=cap?('\u201C'+String(cap).trim()+'\u201D'):'no caption returned';
+      if(cap)vCap.classList.add('ok');
+      doneOne();
+    }).catch(fail(vCap));
+    /* 5 — CLIP zero-shot, Phase 0: Evan's field lists + 8-template ensemble, top 5 */
+    vClip.textContent='downloading model (first use)…';
+    rawP.then(function(raw){
+      return getPipe('zero-shot-image-classification','Xenova/clip-vit-base-patch32').then(function(pipe){
+        vClip.textContent='running field-list ensemble (pass 1 of '+FIELD_TEMPLATES.length+')…';
+        return runFieldEnsemble(pipe,raw,function(done,total){
+          vClip.textContent='running field-list ensemble (pass '+done+' of '+total+')…';
+        });
+      });
+    }).then(function(top){
+      if(!top||!top.length){vClip.textContent='no field-list candidates returned';doneOne();return}
+      renderFieldCandidates(vClip,top);
+      doneOne();
+    }).catch(fail(vClip));
+    /* 6 — OwlViT zero-shot detection */
+    vOwl.textContent='downloading model (first use)…';
+    rawP.then(function(raw){
+      return getPipe('zero-shot-object-detection','Xenova/owlvit-base-patch32').then(function(pipe){
+        vOwl.textContent='running…';
+        return pipe(raw,OWL_LABELS);
+      });
+    }).then(function(out){
+      var hits=(out||[]).filter(function(o){return o.score>=0.1}).slice(0,4);
+      vOwl.textContent=hits.length?hits.map(function(o){return o.label+' '+pct(o.score)}).join(' · '):'none of the field subjects found';
+      if(hits.length)vOwl.classList.add('ok');
+      doneOne();
+    }).catch(fail(vOwl));
   });
 }
 
@@ -414,21 +775,24 @@ function callLLM(msgs,maxTok){
     throw new Error('Could not reach the Llama API — network error or the API blocked the browser request (CORS). Details: '+(err&&err.message?err.message:err));
   });
 }
-document.getElementById('composer').addEventListener('submit',function(e){
-  e.preventDefault();
-  var t=inputEl.value.trim();
-  var pics=pendingPics.slice();
+function sendChatMessage(t,pics,opts){
+  opts=opts||{};
+  t=(t||'').trim(); pics=(pics||[]).slice();
   if(!t&&!pics.length)return;
+  if(opts.fromVoice){var tag=document.createElement('div');tag.className='transcript-tag';tag.textContent='Heard by Whisper · on-device';messagesEl.insertBefore(tag,typingEl)}
   var picWrap=null;
   if(pics.length)picWrap=addPictureBubble(pics,t);else addBubble(t,'out');
-  inputEl.value='';pendingPics=[];renderAttachStrip();
+  scrollThread();
+  if(pics.length&&picWrap)analyzePictures(picWrap,pics);
   if(!conn){
-    if(pics.length&&picWrap)tagPictures(picWrap,pics);
     setWorking(true);
     setTimeout(function(){
       setWorking(false);
-      if(pics.length){addBubble(picReplies[picReplyIdx%picReplies.length],'in');picReplyIdx++}
-      else{addBubble(replies[replyIdx%replies.length],'in');replyIdx++}
+      var reply;
+      if(pics.length){reply=picReplies[picReplyIdx%picReplies.length];picReplyIdx++}
+      else{reply=replies[replyIdx%replies.length];replyIdx++}
+      addBubble(reply,'in');
+      speakReply(reply);
     },1400);
     return;
   }
@@ -450,13 +814,229 @@ document.getElementById('composer').addEventListener('submit',function(e){
     if(history.length>80)history=history.slice(-80);
     setWorking(false);
     addBubble(reply,'in',true);
+    speakReply(reply);
   }).catch(function(err){
     history.pop();
     setWorking(false);
     addError(err.message+' Your message was not added to the conversation — press send again to retry.');
   });
+}
+document.getElementById('composer').addEventListener('submit',function(e){
+  e.preventDefault();
+  var t=inputEl.value.trim();
+  var pics=pendingPics.slice();
+  if(!t&&!pics.length)return;
+  inputEl.value='';pendingPics=[];renderAttachStrip();
+  sendChatMessage(t,pics);
 });
 function showToast(msg){var t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(function(){t.classList.remove('show')},2200)}
+
+
+/* ---- Voice: Whisper transcription in, spoken replies out (Alexa-style talk-back).
+   Transcription: OpenAI Whisper tiny.en via Transformers.js — runs on-device,
+   audio never uploaded for transcription. Works in short chunks: record,
+   stop, transcribe, send. Not word-by-word streaming.
+   Speech out: the browser's SpeechSynthesis. Six generic presets, female to
+   male, each matching a same-gender system voice when one exists on the
+   device, then shaped with pitch + rate. No voice audio is recorded or kept
+   beyond the chunk being transcribed; nothing is persisted. ---- */
+var VOICE_PRESETS=[
+  {id:'nova', name:'Nova', desc:'Female · bright and clear', hint:'female', pitch:1.35, rate:1.05, keys:['female','samantha','zira','aria','jenny','victoria','karen','serena']},
+  {id:'luna', name:'Luna', desc:'Female · warm and calm', hint:'female', pitch:1.15, rate:0.96, keys:['female','samantha','zira','aria','jenny','moira','tessa','fiona']},
+  {id:'sage', name:'Sage', desc:'Female-leaning · neutral and even', hint:'female', pitch:1.0, rate:1.0, keys:['female','samantha','zira','google us english','microsoft']},
+  {id:'river', name:'River', desc:'Neutral · in the middle', hint:'any', pitch:0.88, rate:1.0, keys:['google us english','microsoft','daniel','samantha']},
+  {id:'orion', name:'Orion', desc:'Male · warm and steady', hint:'male', pitch:0.72, rate:0.97, keys:['male','david','daniel','alex','fred','thomas','guy']},
+  {id:'atlas', name:'Atlas', desc:'Male · deep and slow', hint:'male', pitch:0.52, rate:0.9, keys:['male','david','daniel','alex','fred','arthur','ryan']}
+];
+var voiceIdx=1; /* Luna by default */
+var speakOn=true;
+var voiceSelect=document.getElementById('voiceSelect');
+var speakToggle=document.getElementById('speakToggle');
+var testVoiceBtn=document.getElementById('testVoiceBtn');
+var voiceGrid=document.getElementById('voiceGrid');
+var voiceStatusEl=document.getElementById('voiceStatus');
+var voiceStatusText=document.getElementById('voiceStatusText');
+var micBtn=document.getElementById('micBtn');
+function setVoiceStatus(text,mode){
+  voiceStatusText.textContent=text;
+  voiceStatusEl.classList.remove('listening','working','done');
+  if(mode)voiceStatusEl.classList.add(mode);
+}
+function currentPreset(){return VOICE_PRESETS[voiceIdx]}
+function renderVoiceChoices(){
+  voiceSelect.innerHTML='';
+  VOICE_PRESETS.forEach(function(v,i){
+    var o=document.createElement('option');o.value=String(i);o.textContent=v.name+' — '+v.desc;voiceSelect.appendChild(o);
+  });
+  voiceSelect.value=String(voiceIdx);
+  voiceGrid.innerHTML='';
+  VOICE_PRESETS.forEach(function(v,i){
+    var b=document.createElement('button');b.type='button';b.className='voice-chip'+(i===voiceIdx?' active':'');
+    var bold=document.createElement('b');bold.textContent=(i+1)+'. '+v.name;
+    var span=document.createElement('span');span.textContent=v.desc+' · pitch '+v.pitch+' · pace '+v.rate;
+    b.appendChild(bold);b.appendChild(span);
+    b.addEventListener('click',function(){selectVoice(i,true)});
+    voiceGrid.appendChild(b);
+  });
+}
+function selectVoice(i,preview){
+  voiceIdx=i;renderVoiceChoices();
+  setVoiceStatus('Voice set to '+currentPreset().name+' — '+currentPreset().desc+'.','done');
+  if(preview)speakText('Hi, I am Echo, speaking as '+currentPreset().name+'.');
+}
+voiceSelect.addEventListener('change',function(){selectVoice(parseInt(voiceSelect.value,10)||0,false)});
+speakToggle.addEventListener('click',function(){
+  speakOn=!speakOn;
+  speakToggle.classList.toggle('on',speakOn);
+  speakToggle.setAttribute('aria-pressed',speakOn?'true':'false');
+  speakToggle.textContent=speakOn?'Speak replies · On':'Speak replies · Off';
+  if(!speakOn&&window.speechSynthesis)window.speechSynthesis.cancel();
+  setVoiceStatus(speakOn?'Spoken replies are on — Echo will talk back in the '+currentPreset().name+' voice.':'Spoken replies are off. Transcription still works.','done');
+});
+testVoiceBtn.addEventListener('click',function(){speakText('Hi Evan, I am Echo. This is the '+currentPreset().name+' voice — '+currentPreset().desc+'.')});
+function systemVoices(){
+  if(!window.speechSynthesis)return [];
+  return window.speechSynthesis.getVoices()||[];
+}
+function pickSystemVoice(preset){
+  var voices=systemVoices();
+  if(!voices.length)return null;
+  var en=voices.filter(function(v){return /^en([-_]|$)/i.test(v.lang||'')});
+  var pool=en.length?en:voices;
+  var nameOf=function(v){return (v.name||'').toLowerCase()};
+  /* 1) explicit gender word or known name for this preset */
+  for(var k=0;k<preset.keys.length;k++){
+    for(var j=0;j<pool.length;j++){if(nameOf(pool[j]).indexOf(preset.keys[k])!==-1)return pool[j]}
+  }
+  /* 2) any voice whose name carries the gender hint */
+  if(preset.hint!=='any'){
+    for(var m=0;m<pool.length;m++){if(nameOf(pool[m]).indexOf(preset.hint)!==-1)return pool[m]}
+  }
+  return pool[0];
+}
+function cleanForSpeech(text){
+  return String(text||'')
+    .replace(/```[\s\S]*?```/g,' code block omitted. ')
+    .replace(/`([^`]+)`/g,'$1')
+    .replace(/\*\*([^*]+)\*\*/g,'$1')
+    .replace(/[*_#>]/g,' ')
+    .replace(/\[([^\]]+)\]\([^)]+\)/g,'$1')
+    .replace(/\s+/g,' ')
+    .trim().slice(0,700);
+}
+function speakText(text){
+  var clean=cleanForSpeech(text);
+  if(!clean)return;
+  if(!window.speechSynthesis||!window.SpeechSynthesisUtterance){
+    setVoiceStatus('This browser has no speech voices, so Echo cannot talk back here — replies still appear as text.','');
+    return;
+  }
+  try{
+    window.speechSynthesis.cancel();
+    var u=new SpeechSynthesisUtterance(clean);
+    var preset=currentPreset();
+    var v=pickSystemVoice(preset);
+    if(v)u.voice=v;
+    u.pitch=preset.pitch; u.rate=preset.rate; u.volume=1;
+    u.onstart=function(){setVoiceStatus('Speaking in the '+preset.name+' voice…','working')};
+    u.onend=function(){setVoiceStatus('Tap the mic to talk again, or type below.','done')};
+    u.onerror=function(){setVoiceStatus('Speech was blocked or failed on this device — the reply is in the thread as text.','')};
+    window.speechSynthesis.speak(u);
+  }catch(e){
+    setVoiceStatus('Speech failed on this device — the reply is in the thread as text.','');
+  }
+}
+function speakReply(text){if(speakOn)speakText(text)}
+if(window.speechSynthesis&&window.speechSynthesis.onvoiceschanged!==undefined){
+  window.speechSynthesis.onvoiceschanged=function(){/* voices arrived; picking happens live at speak time */};
+}
+renderVoiceChoices();
+
+/* ---- Whisper recording ---- */
+var mediaRecorder=null,mediaStream=null,audioChunks=[],isRecording=false,isTranscribing=false,recordStartedAt=0;
+function stopTracks(){
+  if(mediaStream){mediaStream.getTracks().forEach(function(t){try{t.stop()}catch(e){}});mediaStream=null}
+}
+function setMicState(){
+  micBtn.classList.toggle('recording',isRecording);
+  micBtn.classList.toggle('busy',isTranscribing);
+  micBtn.disabled=isTranscribing;
+}
+function blobToFloat32(blob){
+  return blob.arrayBuffer().then(function(buf){
+    var AC=window.AudioContext||window.webkitAudioContext;
+    if(!AC)throw new Error('This browser cannot decode audio for Whisper.');
+    var ctx=new AC();
+    return ctx.decodeAudioData(buf).then(function(audio){
+      if(ctx.close)ctx.close();
+      var data=audio.getChannelData(0);
+      var sr=audio.sampleRate,target=16000;
+      if(sr===target)return data;
+      var ratio=sr/target,outLen=Math.floor(data.length/ratio),out=new Float32Array(outLen);
+      for(var i=0;i<outLen;i++)out[i]=data[Math.floor(i*ratio)];
+      return out;
+    });
+  });
+}
+function transcribeWithWhisper(blob){
+  setVoiceStatus('Transcribing with Whisper on this device — first use downloads the model (~40 MB), then it is cached.','working');
+  return blobToFloat32(blob).then(function(audio){
+    if(!audio||!audio.length)throw new Error('No audio was captured.');
+    return getPipe('automatic-speech-recognition','Xenova/whisper-tiny.en').then(function(pipe){
+      setVoiceStatus('Whisper is listening to your chunk…','working');
+      return pipe(audio,{chunk_length_s:30,stride_length_s:5,language:'english',task:'transcribe'});
+    });
+  }).then(function(out){
+    var text=out&&out.text?String(out.text).trim():'';
+    return text;
+  });
+}
+function onRecordingStop(){
+  setMicState();
+  var blob=new Blob(audioChunks,{type:mediaRecorder&&mediaRecorder.mimeType?mediaRecorder.mimeType:'audio/webm'});
+  audioChunks=[];
+  var secs=Math.max(0,Math.round((Date.now()-recordStartedAt)/1000));
+  if(!blob.size){setVoiceStatus('Nothing was recorded — try again and speak after the red mic lights up.','');return}
+  isTranscribing=true;setMicState();
+  transcribeWithWhisper(blob).then(function(text){
+    isTranscribing=false;setMicState();
+    if(!text){setVoiceStatus('Whisper could not make out words in that '+secs+'s clip — try again, a bit closer and clearer.','');showToast('Whisper heard no clear words');return}
+    setVoiceStatus('Whisper heard: \u201C'+text+'\u201D','done');
+    sendChatMessage(text,[],{fromVoice:true});
+  }).catch(function(err){
+    isTranscribing=false;setMicState();
+    setVoiceStatus('Whisper could not run here: '+(err&&err.message?err.message:'model or audio failed')+' — typing still works.','');
+    addError('Voice transcription failed — Whisper could not load or run on this device (first use needs a connection for the ~40 MB model). Your recording was not sent anywhere.');
+  });
+}
+function toggleRecording(){
+  if(isTranscribing)return;
+  if(isRecording&&mediaRecorder){
+    isRecording=false;
+    try{mediaRecorder.stop()}catch(e){stopTracks();setMicState()}
+    setVoiceStatus('Stopped — handing your chunk to Whisper…','working');
+    return;
+  }
+  if(window.speechSynthesis)window.speechSynthesis.cancel();
+  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia||!window.MediaRecorder){
+    setVoiceStatus('This browser cannot record audio here, so voice input is unavailable — typing still works.','');
+    showToast('Voice recording is not supported in this browser');
+    return;
+  }
+  navigator.mediaDevices.getUserMedia({audio:true}).then(function(stream){
+    mediaStream=stream;audioChunks=[];
+    mediaRecorder=new MediaRecorder(stream);
+    mediaRecorder.ondataavailable=function(e){if(e.data&&e.data.size)audioChunks.push(e.data)};
+    mediaRecorder.onstop=function(){stopTracks();onRecordingStop()};
+    mediaRecorder.start(250);
+    isRecording=true;recordStartedAt=Date.now();setMicState();
+    setVoiceStatus('Listening… speak now, then tap the mic again to stop and send.','listening');
+  }).catch(function(err){
+    setVoiceStatus('Mic permission was not given, so Echo cannot hear you — allow the microphone, or just type.','');
+    showToast('Microphone unavailable');
+  });
+}
+micBtn.addEventListener('click',toggleRecording);
 
 /* ---- Greeting: on the visitor's first click, Echo types in a hello. ---- */
 var greeted=false;
@@ -471,7 +1051,7 @@ function greet(){
     var i=0;
     var timer=setInterval(function(){
       i++;d.textContent=text.slice(0,i);scrollThread();
-      if(i>=text.length)clearInterval(timer);
+      if(i>=text.length){clearInterval(timer);speakReply(text)}
     },30);
   },900);
 }
