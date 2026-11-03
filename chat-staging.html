@@ -105,7 +105,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Ar
       <button class="send-btn" id="sendBtn" title="Send" aria-label="Send">&uarr;</button>
     </div>
     <audio id="voiceAudio" playsinline preload="auto" style="position:absolute;width:1px;height:1px;opacity:0;pointer-events:none" aria-hidden="true"></audio>
-    <div class="staging-note" id="stagingNote"><strong>STAGING ONLY — remove before live:</strong> <button type="button" id="testToneBtn">Test tone</button> <button type="button" id="testShortVoiceBtn">Test short voice</button> <span id="testToneStatus">Tap Test tone first: if you hear a beep, the iPhone audio path works. If no beep, the phone/browser is blocking audio.</span> <span id="shortVoiceStatus">Test short voice: EXPERIMENTAL — Chatterbox Turbo built-in voice (gender NOT documented, do NOT label male). No finished browser engine yet; expect a labelled incomplete-pipeline failure, not speech. If generation takes more than 30 seconds it will visibly report generate timed out instead of hanging on Stop forever.</span></div>
+    <div class="staging-note" id="stagingNote"><strong>STAGING ONLY — remove before live:</strong> <button type="button" id="testToneBtn">Test tone</button> <button type="button" id="testShortVoiceBtn">Test short voice</button> <span id="testToneStatus">Tap Test tone first: if you hear a beep, the iPhone audio path works. If no beep, the phone/browser is blocking audio.</span> <span id="shortVoiceStatus">Test short voice: EXPERIMENTAL — Chatterbox Turbo built-in voice (gender NOT documented, do NOT label male). Button fixed 2026-11-03 (testShortVoice was previously missing); no finished browser engine yet, so expect a labelled incomplete-pipeline failure, not speech. If generation takes more than 30 seconds it will visibly report generate timed out instead of hanging on Stop forever.</span></div>
     <div class="staging-note" id="voiceDiag"><strong>STAGING ONLY — voice diagnostics:</strong> <span id="voiceDiagStatus">No voice played yet. After tapping Listen, this line shows, for each chunk: text length, blob bytes, decoded duration, sample rate, channels, peak amplitude, and AudioContext state.</span></div>
     <div class="hint">Powered by Llama 4 Scout through a secure proxy &mdash; no downloads, no key needed.</div>
   </div>
@@ -250,6 +250,34 @@ function playTone() {
     if (status) status.textContent = "Test tone failed: " + (err && err.message ? err.message : String(err));
   }
 }
+function testShortVoice() {
+  // FIX (2026-11-03): this function was previously referenced by the
+  // Test short voice button but never defined, so registering the click
+  // handler threw a ReferenceError, init aborted, and the button did
+  // nothing. It is now defined, so a tap always writes a verbatim status.
+  // It still cannot produce speech: loadVoiceEngine only creates the q4
+  // language-model session, and its synthesize() deliberately rejects
+  // with the labelled incomplete-pipeline error (no finished JS wrapper
+  // wiring tokenizer + T3 sampling + conditional_decoder + speaker
+  // conditioning). That rejection is surfaced here, not hidden.
+  const started = new Date();
+  setShortVoiceStatus("Test short voice: generating 'Hi' with Chatterbox Turbo… started " + fmtTime(started) + ". If this passes 30 seconds it will report generate timed out instead of hanging.");
+  setVoiceDiag("Test short voice: generating 'Hi' with Chatterbox Turbo… started " + fmtTime(started) + ".");
+  try { unlockAudio(); getAudioCtx(); } catch (e) {}
+  loadVoiceEngine().then(function (engine) {
+    return generateWithTimeout(engine, "Hi", 30000);
+  }).then(function (blob) {
+    if (!blob) throw new Error("the voice model returned no audio");
+    return playAudioBlob(blob, speechRun, "Hi", 1, 1).then(function () {
+      const finished = new Date();
+      setShortVoiceStatus("Test short voice: DONE — generating started " + fmtTime(started) + ", generate finished " + fmtTime(finished) + " · blob " + blob.size + " bytes · played to the end. Did you hear \"Hi\"?");
+    });
+  }).catch(function (err) {
+    const msg = err && err.message ? err.message : String(err);
+    setShortVoiceStatus("Test short voice: FAILED: " + msg);
+    setVoiceDiag("Test short voice: FAILED: " + msg);
+  });
+}
 function fmtTime(d) {
   try {
     const h = String(d.getHours()).padStart(2, "0"), m = String(d.getMinutes()).padStart(2, "0"), s = String(d.getSeconds()).padStart(2, "0");
@@ -362,10 +390,18 @@ function playAudioBlob(blob, run, chunkText, chunkIndex, chunkTotal) {
    no browser demo in the research found). The ONNX export lists
    speech_encoder, embed_tokens, conditional_decoder and language_model
    (q4 ~350 MB; total download ~691 MB per a local-app doc; repo 7.39 GB),
-   plus default_voice.wav — and, critically, NO vocoder in the export
-   (a HiFi-GAN or similar is still needed for waveform synthesis).
-   One community ONNX adapter also reports Turbo as not yet supported and
-   producing unintelligible output through its base-model path.
+   plus default_voice.wav. CORRECTION (2026-11-03): conditional_decoder
+   IS the S3Gen decoder (mel synthesis + HiFTNet-style vocoder), so the
+   missing piece is NOT a separate vocoder file — it is a finished JS
+   wrapper wiring tokenizer + T3 autoregressive sampling + the
+   conditional_decoder + speaker conditioning from a reference clip.
+   No such wrapper ships in this file, and no published, reusable
+   browser demo/wrapper for Turbo was found in this check (one product
+   claims a WebGPU Turbo clone in-browser, ~560 MB, but its code was
+   not verified as reusable here, and iPhone Safari WebGPU is iOS 26+
+   only). One community ONNX adapter also reports Turbo as not yet
+   supported and producing unintelligible output through its
+   base-model path.
    Voice: built-in default_voice.wav ONLY. No documented male preset
    voice exists for Turbo; cloning a male voice would need a male
    reference clip, which this page does not have and does not fabricate.
@@ -379,12 +415,14 @@ function playAudioBlob(blob, run, chunkText, chunkIndex, chunkTotal) {
    What this build actually does: loadVoiceEngine imports
    onnxruntime-web, pins single-thread WASM, creates the q4 language
    model session, then synthesize() THROWS a visible, labelled
-   "incomplete pipeline" error (no vocoder, no finished generation
-   wrapper). Test short voice / Listen therefore show FAILED with
-   that exact reason instead of hanging, timing out silently, or
-   pretending to speak. If a future builder adds a vocoder + a
-   Turbo-specific generation wrapper, replace synthesize() — do not
-   remove this label until speech is actually generated.
+   "incomplete pipeline" error (no finished JS generation wrapper).
+   Test short voice (now defined, previously missing — see
+   testShortVoice) / Listen therefore show FAILED with that exact
+   reason instead of hanging, timing out silently, or pretending to
+   speak. If a future builder adds the full Turbo wrapper
+   (tokenizer + T3 sampling + conditional_decoder + speaker
+   conditioning), replace synthesize() — do not remove this label
+   until speech is actually generated.
    No speechSynthesis substitution. Live chat.html untouched.
    REMOVE all staging buttons/diagnostics before any live push. */
 const CHATTERBOX_MODEL = "ResembleAI/chatterbox-turbo-ONNX";
@@ -411,7 +449,7 @@ function loadVoiceEngine() {
             return {
               session: session,
               synthesize: function () {
-                return Promise.reject(new Error("EXPERIMENTAL — incomplete pipeline: Chatterbox Turbo ONNX language-model session loaded, but the ONNX export has no vocoder and no finished browser generation wrapper, so no speech can be generated yet. This is not a working voice; do not promote it live."));
+                return Promise.reject(new Error("EXPERIMENTAL — incomplete pipeline: Chatterbox Turbo ONNX language-model session loaded, but there is no finished browser generation wrapper (tokenizer + T3 sampling + conditional_decoder + speaker conditioning), so no speech can be generated yet. This is not a working voice; do not promote it live."));
               }
             };
           });
