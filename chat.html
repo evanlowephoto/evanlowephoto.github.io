@@ -73,7 +73,9 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Ar
         <div class="agent-name">Tiny Tim</div>
         <div class="status-row">
           <span class="status-pill" id="statusPill"><span class="status-dot"></span><span id="statusText">Ready</span></span>
-               </div>
+          <span class="status-pill" title="meta-llama/Llama-4-Scout-17B-16E-Instruct">Llama 4 Scout &middot; cloud</span>
+        </div>
+      </div>
     </div>
     <div class="time-label" id="timeLabel"></div>
     <div class="messages" id="messages" aria-live="polite"></div>
@@ -97,7 +99,7 @@ const WORKER_URL = "https://echo-chat-llama-proxy.evan996.workers.dev/v1/chat/co
 const MODEL = "meta-llama/Llama-4-Scout-17B-16E-Instruct";
 const SYSTEM_PROMPT = "You are Tiny Tim, a helpful assistant inside a small chat app, powered by Meta's Llama model. Answer clearly and concisely. When the user sends a picture, look at it and describe or answer about what is actually in it. Use Markdown sparingly (short paragraphs, occasional lists or code blocks).";
 const HISTORY_LIMIT = 20;
-
+  
 const messagesEl = document.getElementById("messages");
 const inputEl = document.getElementById("input");
 const sendBtn = document.getElementById("sendBtn");
