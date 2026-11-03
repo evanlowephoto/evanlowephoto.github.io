@@ -106,6 +106,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Ar
     </div>
     <audio id="voiceAudio" playsinline preload="auto" style="position:absolute;width:1px;height:1px;opacity:0;pointer-events:none" aria-hidden="true"></audio>
     <div class="staging-note" id="stagingNote"><strong>STAGING ONLY — remove before live:</strong> <button type="button" id="testToneBtn">Test tone</button> <span id="testToneStatus">Tap Test tone first: if you hear a beep, the iPhone audio path works and Kokoro's blob is the suspect. If no beep, the phone/browser is blocking audio.</span></div>
+    <div class="staging-note" id="voiceDiag"><strong>STAGING ONLY — voice diagnostics:</strong> <span id="voiceDiagStatus">No voice played yet. After tapping Listen, this line shows, for each chunk: text length, blob bytes, decoded duration, sample rate, channels, peak amplitude, and AudioContext state.</span></div>
     <div class="hint">Powered by Llama 4 Scout through a secure proxy &mdash; no downloads, no key needed.</div>
   </div>
 </div>
@@ -185,7 +186,12 @@ function addBubble(role, html, cls) {
   return div;
 }
 
-/* ---- STAGING ONLY: voice playback, VOICE FIX ----
+/* ---- STAGING ONLY: voice playback, VOICE DIAGNOSTICS ----
+   Diagnostic copy of the voice-fix staging page. Adds a visible
+   per-chunk diagnostic line (see voiceDiagStatus) and resumes the
+   AudioContext immediately before each chunk play. Nothing else
+   changed. REMOVE the Test tone button and this diagnostic line
+   before any live push.
    One small speaker button per Tiny Tim reply. Tap to read that reply
    back, tap again to stop. No auto-play. Voice: Michael (Kokoro voice
    id am_michael), Kokoro-82M, generated on-device via kokoro-js.
@@ -236,6 +242,9 @@ function getAudioCtx() {
     if (audioCtx && audioCtx.state === "suspended") { const pr = audioCtx.resume(); if (pr && pr.catch) pr.catch(function () {}); }
   } catch (e) {}
   return audioCtx;
+}
+function setVoiceDiag(text) {
+  try { const el = document.getElementById("voiceDiagStatus"); if (el) el.textContent = text; } catch (e) {}
 }
 function withTimeout(p, ms, label) {
   return Promise.race([p, new Promise(function (_, rej) {
@@ -347,23 +356,51 @@ function loadKokoro() {
   }
   return kokoroPromise;
 }
-function playAudioBlobWebAudio(blob, run) {
-  // Primary path: decode the Kokoro blob in an AudioContext resumed in
-  // the tap, then play the decoded buffer. Rejects (visible Voice
-  // failed) if the blob is empty/short or cannot be decoded, instead
-  // of "playing" silently to completion.
+function playAudioBlobWebAudio(blob, run, chunkText, chunkIndex, chunkTotal) {
+  // Primary path: decode the Kokoro blob in an AudioContext resumed
+  // immediately before each chunk play (not only at tap time), then
+  // play the decoded buffer. Diagnostics for every chunk are written
+  // to the visible staging diagnostic line, including peak amplitude:
+  // a decoded buffer with peak 0.000 is silent data, not a playback
+  // failure, and must be reported as such.
+  const label = "Chunk " + chunkIndex + "/" + chunkTotal + " · text " + (chunkText ? chunkText.length : 0) + " chars";
   return Promise.resolve().then(function () {
-    if (!blob || blob.size < 500) throw new Error("the voice model returned no usable audio (blob size " + (blob ? blob.size : 0) + " bytes)");
+    if (!blob || blob.size < 500) {
+      setVoiceDiag(label + " · blob " + (blob ? blob.size : 0) + " bytes · NO usable audio: blob missing or under 500 bytes.");
+      throw new Error("the voice model returned no usable audio (blob size " + (blob ? blob.size : 0) + " bytes)");
+    }
     const ctx = getAudioCtx(); if (!ctx) throw new Error("Web Audio is not available in this browser");
+    const stateAtDecode = ctx.state;
+    const wasSuspendedAtDecode = stateAtDecode === "suspended";
+    setVoiceDiag(label + " · blob " + blob.size + " bytes · context at decode: " + stateAtDecode + " (suspended: " + (wasSuspendedAtDecode ? "yes" : "no") + ") · decoding…");
     return blob.arrayBuffer().then(function (ab) { return ctx.decodeAudioData(ab.slice(0)); }).then(function (buf) {
       if (run !== speechRun) return;
-      if (!buf || !buf.duration || buf.duration < 0.05) throw new Error("the voice model returned an empty audio buffer");
-      return new Promise(function (resolve, reject) {
-        const src = ctx.createBufferSource(); const gain = ctx.createGain();
-        gain.gain.value = 1.0; src.buffer = buf; src.connect(gain); gain.connect(ctx.destination);
-        currentSource = src;
-        src.onended = function () { if (currentSource === src) currentSource = null; resolve(); };
-        try { src.start(); } catch (err) { reject(err); }
+      if (!buf || !buf.duration || buf.duration < 0.05) {
+        setVoiceDiag(label + " · blob " + blob.size + " bytes · decoded " + (buf ? buf.duration.toFixed(2) : "0.00") + "s · EMPTY buffer (under 0.05s).");
+        throw new Error("the voice model returned an empty audio buffer");
+      }
+      let peak = 0;
+      try {
+        for (let ch = 0; ch < buf.numberOfChannels; ch++) {
+          const data = buf.getChannelData(ch);
+          for (let i = 0; i < data.length; i++) { const v = Math.abs(data[i]); if (v > peak) peak = v; }
+        }
+      } catch (e) {}
+      // Resume immediately before THIS chunk plays, and log whether
+      // the context was suspended at that moment.
+      const suspendedBeforePlay = ctx.state === "suspended";
+      const resumePromise = suspendedBeforePlay ? ctx.resume() : Promise.resolve();
+      return Promise.resolve(resumePromise).catch(function () {}).then(function () {
+        const stateAtPlay = ctx.state;
+        setVoiceDiag(label + " · blob " + blob.size + " bytes · decoded " + buf.duration.toFixed(2) + "s · " + buf.sampleRate + " Hz · " + buf.numberOfChannels + " ch · peak " + peak.toFixed(3) + " · context at decode: " + stateAtDecode + " · suspended before chunk play: " + (suspendedBeforePlay ? "yes" : "no") + " · context at play: " + stateAtPlay + (peak === 0 ? " · WARNING: decoded buffer is all silence (peak 0.000)." : ""));
+        if (run !== speechRun) return;
+        return new Promise(function (resolve, reject) {
+          const src = ctx.createBufferSource(); const gain = ctx.createGain();
+          gain.gain.value = 1.0; src.buffer = buf; src.connect(gain); gain.connect(ctx.destination);
+          currentSource = src;
+          src.onended = function () { if (currentSource === src) currentSource = null; resolve(); };
+          try { src.start(); } catch (err) { reject(err); }
+        });
       });
     });
   });
@@ -391,11 +428,14 @@ function playAudioBlobDom(blob) {
     if (pr && pr.catch) pr.catch(function (err) { finish(false); });
   });
 }
-function playAudioBlob(blob, run) {
-  return playAudioBlobWebAudio(blob, run).catch(function (err) {
+function playAudioBlob(blob, run, chunkText, chunkIndex, chunkTotal) {
+  return playAudioBlobWebAudio(blob, run, chunkText, chunkIndex, chunkTotal).catch(function (err) {
     // Only fall back to DOM audio if the run is still active; a decode
-    // failure on a stopped run must not restart playback.
+    // failure on a stopped run must not restart playback. The fallback
+    // is LABELLED in the visible diagnostic line with the exact decode
+    // error, never silent.
     if (run !== speechRun) throw err;
+    setVoiceDiag("Chunk " + chunkIndex + "/" + chunkTotal + " · text " + (chunkText ? chunkText.length : 0) + " chars · blob " + (blob ? blob.size : 0) + " bytes · Web Audio decode failed, DOM fallback used: " + (err && err.message ? err.message : String(err)));
     return playAudioBlobDom(blob);
   });
 }
@@ -414,14 +454,14 @@ function addSpeakButton(bubble, rawText) {
       if (run !== speechRun) return;
       btn.textContent = "Stop";
       const chunks = splitForSpeech(clean); let chain = Promise.resolve();
-      chunks.forEach(function (chunk) {
+      chunks.forEach(function (chunk, chunkIndex) {
         chain = chain.then(function () {
           if (run !== speechRun) return;
           return tts.generate(chunk, { voice: VOICE_ID }).then(function (out) {
             if (run !== speechRun) return;
             const blob = out && out.toBlob ? out.toBlob() : null;
             if (!blob) throw new Error("the voice model returned no audio");
-            return playAudioBlob(blob, run);
+            return playAudioBlob(blob, run, chunk, chunkIndex + 1, chunks.length);
           });
         });
       });
