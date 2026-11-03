@@ -1,5 +1,5 @@
 <!doctype html>
-<!-- STAGING ONLY \u2014 sanoTTS VOICE, not live. Non-ONNX WASM engine (see engine comment in script). Single voice amy; see flag: no documented male English sanoTTS voice. Live chat.html untouched. REMOVE all staging buttons/diagnostics before any live push. -->
+<!-- STAGING ONLY \u2014 Chatterbox Turbo VOICE, not live. Non-ONNX WASM engine (see engine comment in script). Single voice amy; see flag: no documented male English Chatterbox Turbo voice. Live chat.html untouched. REMOVE all staging buttons/diagnostics before any live push. -->
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -105,7 +105,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Ar
       <button class="send-btn" id="sendBtn" title="Send" aria-label="Send">&uarr;</button>
     </div>
     <audio id="voiceAudio" playsinline preload="auto" style="position:absolute;width:1px;height:1px;opacity:0;pointer-events:none" aria-hidden="true"></audio>
-    <div class="staging-note" id="stagingNote"><strong>STAGING ONLY — remove before live:</strong> <button type="button" id="testToneBtn">Test tone</button> <button type="button" id="testShortVoiceBtn">Test short voice</button> <span id="testToneStatus">Tap Test tone first: if you hear a beep, the iPhone audio path works. If no beep, the phone/browser is blocking audio.</span> <span id="shortVoiceStatus">Test short voice: generates only the word Hi with sanoTTS amy. If generation takes more than 30 seconds it will visibly report generate timed out instead of hanging on Stop forever.</span></div>
+    <div class="staging-note" id="stagingNote"><strong>STAGING ONLY — remove before live:</strong> <button type="button" id="testToneBtn">Test tone</button> <button type="button" id="testShortVoiceBtn">Test short voice</button> <span id="testToneStatus">Tap Test tone first: if you hear a beep, the iPhone audio path works. If no beep, the phone/browser is blocking audio.</span> <span id="shortVoiceStatus">Test short voice: EXPERIMENTAL — Chatterbox Turbo built-in voice (gender NOT documented, do NOT label male). No finished browser engine yet; expect a labelled incomplete-pipeline failure, not speech. If generation takes more than 30 seconds it will visibly report generate timed out instead of hanging on Stop forever.</span></div>
     <div class="staging-note" id="voiceDiag"><strong>STAGING ONLY — voice diagnostics:</strong> <span id="voiceDiagStatus">No voice played yet. After tapping Listen, this line shows, for each chunk: text length, blob bytes, decoded duration, sample rate, channels, peak amplitude, and AudioContext state.</span></div>
     <div class="hint">Powered by Llama 4 Scout through a secure proxy &mdash; no downloads, no key needed.</div>
   </div>
@@ -353,94 +353,79 @@ function playAudioBlob(blob, run, chunkText, chunkIndex, chunkTotal) {
   });
 }
 
-/* ---- STAGING ONLY: voice playback, sanoTTS ENGINE ----
-   sanoTTS (Ampixa, GPL-3.0): a tiny neural TTS family, 294k-2.3M params,
-   custom Emscripten WASM (NOT ONNX Runtime, NOT threaded ORT) + bundled
-   espeak-ng phonemizer. This is why it may avoid the failure that killed
-   Piper and Kitten: neither engine ever loads ort-wasm-simd-threaded.jsep.mjs,
-   and GitHub Pages cannot set COOP/COEP, which threaded WASM needs for
-   SharedArrayBuffer. WASM runtime ~2.7 MB uncompressed (~700 KB gzipped
-   over the wire per the project README).
-   Voice: amy, English, 1.46M params, best sanoTTS naturalness scores
-   (SCOREQ 4.13 / UTMOS 4.10 in the project README), ~3 MB fp16 / 5.6 MB fp32.
-   HONEST FLAG: sanoTTS publishes NO documented male English voice.
-   amy/kristin are female-named, hfc/heart/heart-nano gender is undocumented
-   in the README/demo. This build therefore does NOT meet Evan's
-   "male voice, because it's Tiny Tim" requirement as documented; it is a
-   technical proof that a non-ONNX engine can speak at all. Do NOT relabel
-   amy as male. Parent/Evan must decide whether to accept amy, try hfc/heart
-   unlabelled, or reject sanoTTS on voice grounds.
-   API (sanotts-web npm README): SanoTTS.load() (assetBase defaults to the
-   hosted demo https://ampixa.github.io/sanoTTS/), tts.synthesize(text,
-   {voice}) -> {samples: Float32Array, sampleRate, phonemeCount, elapsedMs},
-   tts.loadVoice(key) to pre-download. Samples are converted here to a WAV
-   Blob and played through the existing WebAudio/DOM playback + diagnostics,
-   so a failure is visible, not silent. No speechSynthesis substitution.
-   First tap downloads the WASM runtime + amy voice once, then caches. */
-const SANO_VOICE = "amy";
-const SANO_SOURCES = ["https://cdn.jsdelivr.net/npm/sanotts-web@latest/+esm", "https://esm.sh/sanotts-web@latest"];
-let sanoPromise = null, sanoTts = null;
+/* ---- STAGING ONLY: voice playback, CHATTERBOX TURBO — EXPERIMENTAL, NOT A WORKING VOICE ----
+   EXPERIMENTAL HONEST LABEL: this file does NOT contain a finished browser
+   Chatterbox engine, because no finished browser build exists as of this
+   writing. What exists: Resemble AI Chatterbox Turbo, MIT, 350M params,
+   Hugging Face ResembleAI/chatterbox-turbo-ONNX, with a custom ONNX
+   Runtime Web integration only (no standard transformers.js TTS pipeline,
+   no browser demo in the research found). The ONNX export lists
+   speech_encoder, embed_tokens, conditional_decoder and language_model
+   (q4 ~350 MB; total download ~691 MB per a local-app doc; repo 7.39 GB),
+   plus default_voice.wav — and, critically, NO vocoder in the export
+   (a HiFi-GAN or similar is still needed for waveform synthesis).
+   One community ONNX adapter also reports Turbo as not yet supported and
+   producing unintelligible output through its base-model path.
+   Voice: built-in default_voice.wav ONLY. No documented male preset
+   voice exists for Turbo; cloning a male voice would need a male
+   reference clip, which this page does not have and does not fabricate.
+   Do NOT label the built-in voice male. Gender is undocumented.
+   Threaded-ORT avoidance: this build pins ONNX Runtime Web to
+   numThreads=1, proxy=false, executionProviders ["webgpu","wasm"]
+   (WebGPU first, single-thread WASM fallback) and never requests
+   threads, so it should NOT load ort-wasm-simd-threaded.jsep.mjs.
+   Whether that avoids the Pages COOP/COEP / SharedArrayBuffer blocker
+   is unproven until a browser test runs it.
+   What this build actually does: loadVoiceEngine imports
+   onnxruntime-web, pins single-thread WASM, creates the q4 language
+   model session, then synthesize() THROWS a visible, labelled
+   "incomplete pipeline" error (no vocoder, no finished generation
+   wrapper). Test short voice / Listen therefore show FAILED with
+   that exact reason instead of hanging, timing out silently, or
+   pretending to speak. If a future builder adds a vocoder + a
+   Turbo-specific generation wrapper, replace synthesize() — do not
+   remove this label until speech is actually generated.
+   No speechSynthesis substitution. Live chat.html untouched.
+   REMOVE all staging buttons/diagnostics before any live push. */
+const CHATTERBOX_MODEL = "ResembleAI/chatterbox-turbo-ONNX";
+const CHATTERBOX_LM_URL = "https://huggingface.co/ResembleAI/chatterbox-turbo-ONNX/resolve/main/onnx/language_model_q4.onnx";
+const ORT_SOURCES = ["https://cdn.jsdelivr.net/npm/onnxruntime-web@1.22.0/dist/ort.webgpu.min.js", "https://cdn.jsdelivr.net/npm/onnxruntime-web/dist/ort.min.js", "https://esm.sh/onnxruntime-web@1.22.0"];
+let chatterPromise = null, chatterEngine = null;
 function loadVoiceEngine() {
-  if (sanoTts) return Promise.resolve(sanoTts);
-  if (!sanoPromise) {
+  if (chatterEngine) return Promise.resolve(chatterEngine);
+  if (!chatterPromise) {
     const failures = [];
     function trySource(i) {
-      if (i >= SANO_SOURCES.length) return Promise.reject(new Error("the sanoTTS voice library failed to load \u2014 " + failures.join(" \u00b7 ")));
-      const url = SANO_SOURCES[i];
-      return withTimeout(Promise.resolve().then(function () { return import(url); }), 60000, "sanoTTS library import (" + url + ")")
+      if (i >= ORT_SOURCES.length) return Promise.reject(new Error("the Chatterbox voice library failed to load \u2014 " + failures.join(" \u00b7 ")));
+      const url = ORT_SOURCES[i];
+      return withTimeout(Promise.resolve().then(function () { return import(url); }), 60000, "onnxruntime-web import (" + url + ")")
         .then(function (mod) {
-          const SanoTTS = mod && (mod.SanoTTS || (mod.default && mod.default.SanoTTS));
-          if (!SanoTTS || typeof SanoTTS.load !== "function") throw new Error("the module loaded but exposed no SanoTTS.load function");
-          return withTimeout(Promise.resolve().then(function () { return SanoTTS.load(); }), 300000, "sanoTTS runtime load").then(function (tts) {
-            if (!tts || typeof tts.synthesize !== "function") throw new Error("sanoTTS loaded but exposed no synthesize function");
-            if (typeof tts.loadVoice === "function") {
-              return withTimeout(Promise.resolve().then(function () { return tts.loadVoice(SANO_VOICE); }), 300000, "sanoTTS voice download").then(function () { return tts; });
-            }
-            return tts;
+          const ort = mod && (mod.InferenceSession ? mod : (mod.default || null));
+          if (!ort || typeof ort.InferenceSession.create !== "function") throw new Error("onnxruntime-web loaded but exposed no InferenceSession.create");
+          try {
+            if (ort.env && ort.env.wasm) { ort.env.wasm.numThreads = 1; ort.env.wasm.proxy = false; }
+          } catch (e) {}
+          return withTimeout(Promise.resolve().then(function () {
+            return ort.InferenceSession.create(CHATTERBOX_LM_URL, { executionProviders: ["webgpu", "wasm"] });
+          }), 300000, "Chatterbox language-model session load").then(function (session) {
+            return {
+              session: session,
+              synthesize: function () {
+                return Promise.reject(new Error("EXPERIMENTAL — incomplete pipeline: Chatterbox Turbo ONNX language-model session loaded, but the ONNX export has no vocoder and no finished browser generation wrapper, so no speech can be generated yet. This is not a working voice; do not promote it live."));
+              }
+            };
           });
         })
         .catch(function (err) { failures.push(url + " \u2192 " + (err && err.message ? err.message : err)); return trySource(i + 1); });
     }
-    sanoPromise = trySource(0).then(function (tts) { sanoTts = tts; return tts; });
-    sanoPromise.catch(function () { if (sanoPromise) sanoPromise = null; });
+    chatterPromise = trySource(0).then(function (eng) { chatterEngine = eng; return eng; });
+    chatterPromise.catch(function () { if (chatterPromise) chatterPromise = null; });
   }
-  return sanoPromise;
+  return chatterPromise;
 }
-function generateWithTimeout(tts, text, ms) {
-  return withTimeout(Promise.resolve().then(function () { return tts.synthesize(text, { voice: SANO_VOICE }); }), ms, "sanoTTS generate").then(function (out) {
-    if (!out || !out.samples || !out.samples.length) throw new Error("the voice model returned no audio");
-    return wavBlobFromSamples(out.samples, out.sampleRate);
-  });
+function generateWithTimeout(engine, text, ms) {
+  return withTimeout(Promise.resolve().then(function () { return engine.synthesize(text); }), ms, "Chatterbox generate");
 }
-function testShortVoice() {
-  unlockAudio(); getAudioCtx();
-  stopSpeaking();
-  const started = new Date();
-  setShortVoiceStatus("Test short voice: generating \"Hi\" with sanoTTS amy\u2026 started " + fmtTime(started) + ". If this passes 30 seconds it will report generate timed out.");
-  setVoiceDiag("Test short voice: generating \"Hi\"\u2026 started " + fmtTime(started) + ".");
-  const run = speechRun;
-  loadVoiceEngine().then(function (tts) {
-    if (run !== speechRun) return;
-    const genStarted = new Date();
-    setShortVoiceStatus("Test short voice: sanoTTS loaded, generating \"Hi\"\u2026 generating started " + fmtTime(genStarted) + ".");
-    return generateWithTimeout(tts, "Hi", 30000).then(function (blob) {
-      if (run !== speechRun) return;
-      const genFinished = new Date();
-      const secs = ((genFinished - genStarted) / 1000).toFixed(1);
-      setShortVoiceStatus("Test short voice: generate finished " + fmtTime(genFinished) + " (" + secs + "s after generating started) \u00b7 blob " + blob.size + " bytes \u00b7 playing\u2026");
-      return playAudioBlob(blob, run, "Hi", 1, 1).then(function () {
-        setShortVoiceStatus("Test short voice: DONE \u2014 generating started " + fmtTime(genStarted) + ", generate finished " + fmtTime(genFinished) + " (" + secs + "s) \u00b7 blob " + blob.size + " bytes \u00b7 played to the end. Did you hear \"Hi\"?");
-      });
-    });
-  }).catch(function (err) {
-    if (run !== speechRun) return;
-    const msg = err && err.message ? err.message : String(err);
-    const timedOut = /timed out/i.test(msg);
-    setShortVoiceStatus("Test short voice: " + (timedOut ? "generate timed out after 30 seconds \u2014 sanoTTS did not finish generating \"Hi\" in time." : "FAILED: " + msg));
-    setVoiceDiag("Test short voice: " + (timedOut ? "generate timed out after 30 seconds." : "FAILED: " + msg));
-  });
-}
-
 function cleanForSpeech(text) {
   return String(text || "")
     .replace(/```[\s\S]*?```/g, " code block omitted. ")
