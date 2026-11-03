@@ -1,5 +1,5 @@
 <!doctype html>
-<!-- STAGING ONLY — KITTEN VOICE, not live. Copied from the fixed voice staging build, with the previous engine REMOVED and replaced by Kitten TTS nano (kitten-tts-js, ONNX CPU WASM, on-device, no server audio). Single voice only: Jasper, male, model onnx-community/KittenTTS-Nano-v0.8-ONNX (~60 MB browser ONNX). Why Kitten: the previous two engines failed on Evan's iPhone — one timed out generating even "Hi" in 30 seconds, the other failed visibly in the browser with no available backend, importing a module script failed. Live chat.html untouched. REMOVE all staging buttons/diagnostics before any live push. -->
+<!-- STAGING ONLY — KITTEN VOICE, not live. Copied from the fixed voice staging build, with the previous engine REMOVED and replaced by Kitten TTS nano (kitten-tts-js, ONNX CPU WASM, on-device, no server audio). Single voice only: Jasper, male, model KittenML/kitten-tts-nano-0.8 (~60 MB browser ONNX). Why Kitten: the previous two engines failed on Evan's iPhone — one timed out generating even "Hi" in 30 seconds, the other failed visibly in the browser with no available backend, importing a module script failed. Live chat.html untouched. REMOVE all staging buttons/diagnostics before any live push. -->
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -189,7 +189,7 @@ function addBubble(role, html, cls) {
 /* ---- STAGING ONLY: voice playback, KITTEN ENGINE ----
    One small speaker button per Tiny Tim reply. Tap to read that reply
    back, tap again to stop. No auto-play. Single voice only, no picker:
-   Kitten voice Jasper (male), model onnx-community/KittenTTS-Nano-v0.8-ONNX,
+   Kitten voice Jasper (male), model KittenML/kitten-tts-nano-0.8,
    generated on-device via kitten-tts-js (unofficial community JS port of
    KittenTTS by KittenML, Apache 2.0; ONNX CPU WASM, 24 kHz mono, single
    WASM thread for iPhone Safari). Loaded LAZILY on the first speaker tap
@@ -206,7 +206,7 @@ function addBubble(role, html, cls) {
    with the DOM <audio> path only as a fallback if Web Audio decoding
    fails, labelled in the diagnostic line. */
 const KITTEN_VOICE = "Jasper"; // Jasper, single voice only, male voice for Tiny Tim
-const KITTEN_MODEL = "onnx-community/KittenTTS-Nano-v0.8-ONNX";
+const KITTEN_MODEL = "KittenML/kitten-tts-nano-0.8";
 const KITTEN_SOURCES = ["https://esm.sh/kitten-tts-js", "https://cdn.jsdelivr.net/npm/kitten-tts-js/+esm"];
 let kittenPromise = null, kittenTts = null;
 let speechRun = 0, silentWavUrl = "", currentAudioUrl = "", activeSpeakBtn = null;
