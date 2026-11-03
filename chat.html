@@ -247,9 +247,9 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Ar
     <div class="key-form">
       <div>
         <label for="modelInput">Llama model</label>
-        <input id="modelInput" type="text" value="Llama-4-Scout-17B-16E-Instruct-FP8" list="llamaModels" autocomplete="off" spellcheck="false">
+        <input id="modelInput" type="text" value="meta-llama/Llama-4-Scout-17B-16E-Instruct" list="llamaModels" autocomplete="off" spellcheck="false">
         <datalist id="llamaModels">
-          <option value="Llama-4-Scout-17B-16E-Instruct-FP8"></option>
+          <option value="meta-llama/Llama-4-Scout-17B-16E-Instruct"></option>
           <option value="Llama-4-Maverick-17B-128E-Instruct-FP8"></option>
           <option value="Llama-3.3-70B-Instruct"></option>
         </datalist>
@@ -1120,7 +1120,7 @@ document.addEventListener('paste',function(e){
 messagesEl.addEventListener('drop',function(e){if(e.dataTransfer)addFiles(e.dataTransfer.files)});
 
 /* ---- Real Llama LLM: bring your own Llama API key. The key lives in this tab's memory only. ---- */
-var LLAMA_API_URL='https://api.llama.com/v1/chat/completions';
+var LLAMA_API_URL='https://echo-chat-llama-proxy.evan996.workers.dev/v1/chat/completions';
 var SYSTEM_PROMPT='You are Tiny Tim, a helpful assistant inside a small chat app, powered by Meta\'s Llama model. Answer clearly and concisely. When the user sends a picture, look at it and describe or answer about what is actually in it. Use Markdown sparingly (short paragraphs, occasional lists or code blocks).';
 var conn=null; // {key,model} — memory only, never persisted
 var chatHistory=[]; // {role:'user'|'assistant', content:string|array} — NOT named "history": a top-level var history collides with window.history (the browser's navigation object, which cannot be overwritten), so history stayed that object and history.push did not exist — every key-connected send died before reaching the model. Demo mode never touched it, which is why only connected sends failed.
