@@ -6,11 +6,6 @@
 <meta name="color-scheme" content="light dark">
 <link rel="icon" href="data:,">
 <title>Tiny Tim — Chat</title>
-<script type="module">
-/* On-device voice input: Whisper tiny.en via transformers.js (no server key, audio never leaves the device). */
-import { pipeline } from "https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.1/+esm";
-window.__tinyTimVoicePipeline = pipeline;
-</script>
 <style>
 :root{
 --bg:#f2f3f5; --surface:#ffffff; --surface2:#eef0f3; --text:#111318; --muted:#6b7280; --line:#e2e4e8;
@@ -62,7 +57,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Ar
 .thumb button{position:absolute;top:2px;right:2px;width:20px;height:20px;border-radius:50%;border:none;background:rgba(0,0,0,.6);color:#fff;font-size:12px;cursor:pointer;line-height:1}
 .composer{display:flex;align-items:center;gap:8px;padding:10px 12px;border-top:1px solid var(--line);background:var(--surface)}
 .icon-btn{width:40px;height:40px;border-radius:50%;border:1px solid var(--line);background:var(--surface2);color:var(--text);font-size:20px;line-height:1;display:flex;align-items:center;justify-content:center;cursor:pointer;flex:0 0 auto}
-.icon-btn.listening{background:var(--blue);border-color:var(--blue);color:#fff;animation:pulse 1s infinite}
 #input{flex:1;border:1px solid var(--line);background:var(--surface2);color:var(--text);border-radius:999px;padding:10px 14px;font-size:15px;font-family:inherit;resize:none;max-height:120px;line-height:1.35}
 #input:focus{outline:2px solid var(--blue);outline-offset:0}
 .send-btn{width:40px;height:40px;border-radius:50%;border:none;background:var(--blue);color:#fff;font-size:18px;cursor:pointer;flex:0 0 auto;display:flex;align-items:center;justify-content:center}
@@ -88,7 +82,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Ar
       <button class="icon-btn" id="attachBtn" title="Attach a picture" aria-label="Attach a picture">&#xFF0B;</button>
       <input type="file" id="fileInput" accept="image/*" hidden>
       <textarea id="input" rows="1" placeholder="Message Tiny Tim&hellip;" aria-label="Message"></textarea>
-      <button class="icon-btn" id="micBtn" title="Voice input" aria-label="Voice input">&#x1F3A4;</button>
       <button class="send-btn" id="sendBtn" title="Send" aria-label="Send">&uarr;</button>
     </div>
     <div class="hint">Powered by Llama 4 Scout through a secure proxy &mdash; no downloads, no key needed.</div>
@@ -110,17 +103,48 @@ const inputEl = document.getElementById("input");
 const sendBtn = document.getElementById("sendBtn");
 const attachBtn = document.getElementById("attachBtn");
 const fileInput = document.getElementById("fileInput");
-const micBtn = document.getElementById("micBtn");
 const thumbStrip = document.getElementById("thumbStrip");
 const statusPill = document.getElementById("statusPill");
-const statusText = document.getElementById("statusText");  let pendingImage = null; // JPEG data URL, or null const history = [];      // {role, content} in OpenAI chat format  function setStatus(mode, text) {   statusPill.classList.toggle("working", mode === "working");   statusText.textContent = text; } function scrollDown() { messagesEl.scrollTop = messagesEl.scrollHeight; } function esc(s) {   return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;"); } /* Tiny Markdown: fenced code blocks, inline code, bold, italic, lists, paragraphs. */ function md(src) {   const blocks = [];   let text = esc(src).replace(/```[a-zA-Z0-9_-]*
-?([\s\S]*?)```/g, function (m, code) {     blocks.push("<pre><code>" + code.replace(/^
-+|\s+$/g, "") + "</code></pre>");     return "\u0000" + (blocks.length - 1) + "\u0000";   });   text = text.replace(/`([^`
-]+)`/g, "<code>$1</code>");   text = text.replace(/\*\*([^*
-]+)\*\*/g, "<strong>$1</strong>");   text = text.replace(/(^|[\s(>])\*([^*
-]+)\*/g, "$1<em>$2</em>");   const lines = text.split("
-");   let html = "", list = null;   const close = function () { if (list) { html += list === "ul" ? "</ul>" : "</ol>"; list = null; } };   for (const line of lines) {     const t = line.trim();     const ph = t.match(/^\u0000(\d+)\u0000$/);     if (ph) { close(); html += blocks[+ph[1]]; continue; }     const ul = t.match(/^[-*]\s+(.*)$/);     const ol = t.match(/^\d+[.)]\s+(.*)$/);     if (ul) { if (list !== "ul") { close(); html += "<ul>"; list = "ul"; } html += "<li>" + ul[1] + "</li>"; }     else if (ol) { if (list !== "ol") { close(); html += "<ol>"; list = "ol"; } html += "<li>" + ol[1] + "</li>"; }     else if (t === "") { close(); }     else { close(); html += "<p>" + t + "</p>"; }   }   close();   return html || "<p></p>"; }
+const statusText = document.getElementById("statusText");
 
+let pendingImage = null; // JPEG data URL, or null
+const history = [];      // {role, content} in OpenAI chat format
+
+function setStatus(mode, text) {
+  statusPill.classList.toggle("working", mode === "working");
+  statusText.textContent = text;
+}
+function scrollDown() { messagesEl.scrollTop = messagesEl.scrollHeight; }
+function esc(s) {
+  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+/* Tiny Markdown: fenced code blocks, inline code, bold, italic, lists, paragraphs. */
+function md(src) {
+  const blocks = [];
+  let text = esc(src).replace(/```[a-zA-Z0-9_-]*\n?([\s\S]*?)```/g, function (m, code) {
+    blocks.push("<pre><code>" + code.replace(/^\n+|\s+$/g, "") + "</code></pre>");
+    return "\u0000" + (blocks.length - 1) + "\u0000";
+  });
+  text = text.replace(/`([^`\n]+)`/g, "<code>$1</code>");
+  text = text.replace(/\*\*([^*\n]+)\*\*/g, "<strong>$1</strong>");
+  text = text.replace(/(^|[\s(>])\*([^*\n]+)\*/g, "$1<em>$2</em>");
+  const lines = text.split("\n");
+  let html = "", list = null;
+  const close = function () { if (list) { html += list === "ul" ? "</ul>" : "</ol>"; list = null; } };
+  for (const line of lines) {
+    const t = line.trim();
+    const ph = t.match(/^\u0000(\d+)\u0000$/);
+    if (ph) { close(); html += blocks[+ph[1]]; continue; }
+    const ul = t.match(/^[-*]\s+(.*)$/);
+    const ol = t.match(/^\d+[.)]\s+(.*)$/);
+    if (ul) { if (list !== "ul") { close(); html += "<ul>"; list = "ul"; } html += "<li>" + ul[1] + "</li>"; }
+    else if (ol) { if (list !== "ol") { close(); html += "<ol>"; list = "ol"; } html += "<li>" + ol[1] + "</li>"; }
+    else if (t === "") { close(); }
+    else { close(); html += "<p>" + t + "</p>"; }
+  }
+  close();
+  return html || "<p></p>";
+}
 function addBubble(role, html, cls) {
   const div = document.createElement("div");
   div.className = "msg " + (cls || role);
@@ -201,108 +225,6 @@ async function send() {
     inputEl.focus();
   }
 }
-/* Voice input: on-device Whisper tiny.en via transformers.js. First tap loads
-   the model ("Loading voice\u2026"), then records; tap again to stop. The
-   recording is transcribed locally and appended to the message box (never
-   auto-sent). Audio never leaves the device. */
-let voiceTranscriber = null; // Promise for the Whisper pipeline, once loaded
-let voiceLoading = false;
-let mediaRecorder = null;
-let audioChunks = [];
-let recording = false;
-function loadVoiceModel() {
-  if (!voiceTranscriber) {
-    voiceTranscriber = (async function () {
-      const makePipeline = window.__tinyTimVoicePipeline;
-      if (typeof makePipeline !== "function") throw new Error("voice-unavailable");
-      return makePipeline("automatic-speech-recognition", "Xenova/whisper-tiny.en");
-    })();
-  }
-  return voiceTranscriber;
-}
-function setVoiceUI(on) {
-  micBtn.classList.toggle("listening", on);
-  if (on) setStatus("working", "Listening\u2026");
-}
-async function blobToMono16k(blob) {
-  const bytes = await blob.arrayBuffer();
-  const AC = window.AudioContext || window.webkitAudioContext;
-  const ctx = new AC();
-  try {
-    const decoded = await ctx.decodeAudioData(bytes);
-    const rate = 16000;
-    const offline = new OfflineAudioContext(1, Math.max(1, Math.ceil(decoded.duration * rate)), rate);
-    const src = offline.createBufferSource();
-    src.buffer = decoded;
-    src.connect(offline.destination);
-    src.start(0);
-    const rendered = await offline.startRendering();
-    return rendered.getChannelData(0);
-  } finally {
-    if (ctx.close) ctx.close();
-  }
-}
-function stopRecording() {
-  if (mediaRecorder && recording) {
-    recording = false;
-    try { mediaRecorder.stop(); } catch (e) {}
-    if (mediaRecorder.stream) mediaRecorder.stream.getTracks().forEach(function (t) { t.stop(); });
-  }
-}
-async function finishRecording() {
-  setVoiceUI(false);
-  setStatus("working", "Transcribing\u2026");
-  try {
-    const blob = new Blob(audioChunks, { type: (mediaRecorder && mediaRecorder.mimeType) || "audio/webm" });
-    audioChunks = [];
-    const audio = await blobToMono16k(blob);
-    const transcriber = await loadVoiceModel();
-    const out = await transcriber(audio, { chunk_length_s: 30, stride_length_s: 5 });
-    const said = out && out.text ? String(out.text).trim() : "";
-    if (said) {
-      const cur = inputEl.value.replace(/\s+$/, "");
-      inputEl.value = cur ? cur + " " + said : said;
-      autoresize();
-    }
-  } catch (err) {
-    addBubble("in", "<p>" + esc("Voice input failed \u2014 please try again.") + "</p>", "error");
-  } finally {
-    setStatus("idle", "Ready");
-    inputEl.focus();
-  }
-}
-async function toggleMic() {
-  if (voiceLoading) return;
-  if (recording) { stopRecording(); return; }
-  if (!voiceTranscriber) {
-    voiceLoading = true;
-    setStatus("working", "Loading voice\u2026");
-    try {
-      await loadVoiceModel();
-    } catch (err) {
-      voiceTranscriber = null;
-      voiceLoading = false;
-      setStatus("idle", "Ready");
-      addBubble("in", "<p>" + esc("Voice input failed to load \u2014 please try again later.") + "</p>", "error");
-      return;
-    }
-    voiceLoading = false;
-  }
-  try {
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    audioChunks = [];
-    mediaRecorder = new MediaRecorder(stream);
-    mediaRecorder.ondataavailable = function (e) { if (e.data && e.data.size) audioChunks.push(e.data); };
-    mediaRecorder.onstop = function () { finishRecording(); };
-    mediaRecorder.start();
-    recording = true;
-    setVoiceUI(true);
-  } catch (err) {
-    setStatus("idle", "Ready");
-    addBubble("in", "<p>" + esc("Microphone is not available \u2014 please allow microphone access and try again.") + "</p>", "error");
-  }
-}
-micBtn.addEventListener("click", toggleMic);
 attachBtn.addEventListener("click", function () { fileInput.click(); });
 fileInput.addEventListener("change", function () {
   const f = fileInput.files && fileInput.files[0];
