@@ -1,5 +1,5 @@
 <!doctype html>
-<!-- STAGING ONLY — VOICE FIX, not live. Base: live c000172 + markdown fix (sub/sup + headings) + Camera choice + single-voice (Michael/Kokoro) playback. Changes vs the live voice page: (1) a real <audio> element in the DOM, (2) a staging-only Test tone button, (3) Web Audio playback for Kokoro output. Live chat.html untouched. REMOVE the Test tone button before any live push. -->
+<!-- STAGING ONLY — VOICE SHORT TEST, not live. Copied from staging-voice-diag, plus: (1) a staging-only Test short voice button generating only "Hi" with a 30s generate timeout, (2) a 30s per-chunk generate timeout and Generating status in the normal Listen flow. Live chat.html untouched. REMOVE all staging buttons/diagnostics before any live push. -->
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -105,7 +105,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Ar
       <button class="send-btn" id="sendBtn" title="Send" aria-label="Send">&uarr;</button>
     </div>
     <audio id="voiceAudio" playsinline preload="auto" style="position:absolute;width:1px;height:1px;opacity:0;pointer-events:none" aria-hidden="true"></audio>
-    <div class="staging-note" id="stagingNote"><strong>STAGING ONLY — remove before live:</strong> <button type="button" id="testToneBtn">Test tone</button> <span id="testToneStatus">Tap Test tone first: if you hear a beep, the iPhone audio path works and Kokoro's blob is the suspect. If no beep, the phone/browser is blocking audio.</span></div>
+    <div class="staging-note" id="stagingNote"><strong>STAGING ONLY — remove before live:</strong> <button type="button" id="testToneBtn">Test tone</button> <button type="button" id="testShortVoiceBtn">Test short voice</button> <span id="testToneStatus">Tap Test tone first: if you hear a beep, the iPhone audio path works and Kokoro's blob is the suspect. If no beep, the phone/browser is blocking audio.</span> <span id="shortVoiceStatus">Test short voice: generates only the word "Hi" with Kokoro Michael. If generation takes more than 30 seconds it will visibly report "generate timed out" instead of hanging on Stop forever.</span></div>
     <div class="staging-note" id="voiceDiag"><strong>STAGING ONLY — voice diagnostics:</strong> <span id="voiceDiagStatus">No voice played yet. After tapping Listen, this line shows, for each chunk: text length, blob bytes, decoded duration, sample rate, channels, peak amplitude, and AudioContext state.</span></div>
     <div class="hint">Powered by Llama 4 Scout through a secure proxy &mdash; no downloads, no key needed.</div>
   </div>
@@ -297,6 +297,53 @@ function playTone() {
     if (status) status.textContent = "Test tone failed: " + (err && err.message ? err.message : String(err));
   }
 }
+function fmtTime(d) {
+  try {
+    const h = String(d.getHours()).padStart(2, "0"), m = String(d.getMinutes()).padStart(2, "0"), s = String(d.getSeconds()).padStart(2, "0");
+    return h + ":" + m + ":" + s;
+  } catch (e) { return ""; }
+}
+function setShortVoiceStatus(text) {
+  try { const el = document.getElementById("shortVoiceStatus"); if (el) el.textContent = text; } catch (e) {}
+}
+function generateWithTimeout(tts, text, ms) {
+  // 30s cap per chunk: a short reply that takes longer is already
+  // broken by Evan's bar, so report a timeout instead of hanging
+  // on Stop forever. withTimeout() already exists in this file.
+  return withTimeout(Promise.resolve().then(function () { return tts.generate(text, { voice: VOICE_ID }); }), ms, "Kokoro generate");
+}
+function testShortVoice() {
+  // STAGING ONLY. Generates only the single word "Hi" — the smallest
+  // possible Kokoro job — so a hang cannot be blamed on a long reply.
+  unlockAudio(); getAudioCtx();
+  stopSpeaking();
+  const started = new Date();
+  setShortVoiceStatus("Test short voice: generating \"Hi\"… started " + fmtTime(started) + ". If this passes 30 seconds it will report generate timed out.");
+  setVoiceDiag("Test short voice: generating \"Hi\"… started " + fmtTime(started) + ".");
+  const run = speechRun;
+  loadKokoro().then(function (tts) {
+    if (run !== speechRun) return;
+    const genStarted = new Date();
+    setShortVoiceStatus("Test short voice: model loaded, generating \"Hi\"… generating started " + fmtTime(genStarted) + ".");
+    return generateWithTimeout(tts, "Hi", 30000).then(function (out) {
+      if (run !== speechRun) return;
+      const genFinished = new Date();
+      const secs = ((genFinished - genStarted) / 1000).toFixed(1);
+      const blob = out && out.toBlob ? out.toBlob() : null;
+      if (!blob) throw new Error("the voice model returned no audio");
+      setShortVoiceStatus("Test short voice: generate finished " + fmtTime(genFinished) + " (" + secs + "s after generating started) · blob " + blob.size + " bytes · playing…");
+      return playAudioBlob(blob, run, "Hi", 1, 1).then(function () {
+        setShortVoiceStatus("Test short voice: DONE — generating started " + fmtTime(genStarted) + ", generate finished " + fmtTime(genFinished) + " (" + secs + "s) · blob " + blob.size + " bytes · played to the end. Did you hear \"Hi\"?");
+      });
+    });
+  }).catch(function (err) {
+    if (run !== speechRun) return;
+    const msg = err && err.message ? err.message : String(err);
+    const timedOut = /timed out/i.test(msg);
+    setShortVoiceStatus("Test short voice: " + (timedOut ? "generate timed out after 30 seconds — Kokoro did not finish generating \"Hi\" in time." : "FAILED: " + msg));
+    setVoiceDiag("Test short voice: " + (timedOut ? "generate timed out after 30 seconds." : "FAILED: " + msg));
+  });
+}
 function cleanForSpeech(text) {
   return String(text || "")
     .replace(/```[\s\S]*?```/g, " code block omitted. ")
@@ -457,7 +504,8 @@ function addSpeakButton(bubble, rawText) {
       chunks.forEach(function (chunk, chunkIndex) {
         chain = chain.then(function () {
           if (run !== speechRun) return;
-          return tts.generate(chunk, { voice: VOICE_ID }).then(function (out) {
+          setVoiceDiag("Generating chunk " + (chunkIndex + 1) + "/" + chunks.length + "… started " + fmtTime(new Date()) + ". If this passes 30 seconds it will report generate timed out instead of hanging on Stop.");
+          return generateWithTimeout(tts, chunk, 30000).then(function (out) {
             if (run !== speechRun) return;
             const blob = out && out.toBlob ? out.toBlob() : null;
             if (!blob) throw new Error("the voice model returned no audio");
@@ -470,6 +518,7 @@ function addSpeakButton(bubble, rawText) {
       if (run !== speechRun) return;
       stopSpeaking();
       btn.textContent = "Voice failed — tap to retry"; btn.title = err && err.message ? err.message : String(err);
+      if (/timed out/i.test(err && err.message ? err.message : String(err))) setVoiceDiag("Listen: generate timed out after 30 seconds — Kokoro did not finish generating a chunk in time, so playback stopped instead of hanging on Stop.");
     });
   });
   row.appendChild(btn); bubble.appendChild(row);
@@ -616,6 +665,7 @@ sendBtn.addEventListener("click", send);
   document.getElementById("timeLabel").textContent = "Today \u00B7 " + h + ":" + min + " " + ap;
   addSpeakButton(addBubble("in", md("Hi, I'm **Tiny Tim**! Ask me anything \u2014 I now run on **Llama 4 Scout** in the cloud, so there's nothing to download and no key to enter. You can also attach a picture for me to look at.")), "Hi, I'm Tiny Tim! Ask me anything — I now run on Llama 4 Scout in the cloud, so there's nothing to download and no key to enter. You can also attach a picture for me to look at.");
   const toneBtn = document.getElementById("testToneBtn"); if (toneBtn) toneBtn.addEventListener("click", playTone);
+  const shortBtn = document.getElementById("testShortVoiceBtn"); if (shortBtn) shortBtn.addEventListener("click", testShortVoice);
   autoresize();
 })();
 </script>
