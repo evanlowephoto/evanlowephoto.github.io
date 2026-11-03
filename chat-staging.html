@@ -1,5 +1,5 @@
 <!doctype html>
-<!-- STAGING ONLY — VOICE SHORT TEST, not live. Copied from staging-voice-diag, plus: (1) a staging-only Test short voice button generating only "Hi" with a 30s generate timeout, (2) a 30s per-chunk generate timeout and Generating status in the normal Listen flow. Live chat.html untouched. REMOVE all staging buttons/diagnostics before any live push. -->
+<!-- STAGING ONLY — PIPER VOICE, not live. Copied from staging-voice-short-test, with the previous engine REMOVED and replaced by Piper (piper-tts-web, VITS CPU WASM, on-device, no server audio). Single voice only: en_US-joe-medium (Joe, US male, medium, ~63 MB ONNX, CC0 dataset licence, finetuned from lessac). Why Piper: the previous engine timed out generating even the single word "Hi" in 30 seconds on Evan's iPhone, in both short-voice and Listen tests, while Test tone beeped — its WASM generation hangs on iPhone, so it is out. Live chat.html untouched. REMOVE all staging buttons/diagnostics before any live push. -->
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -105,7 +105,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Ar
       <button class="send-btn" id="sendBtn" title="Send" aria-label="Send">&uarr;</button>
     </div>
     <audio id="voiceAudio" playsinline preload="auto" style="position:absolute;width:1px;height:1px;opacity:0;pointer-events:none" aria-hidden="true"></audio>
-    <div class="staging-note" id="stagingNote"><strong>STAGING ONLY — remove before live:</strong> <button type="button" id="testToneBtn">Test tone</button> <button type="button" id="testShortVoiceBtn">Test short voice</button> <span id="testToneStatus">Tap Test tone first: if you hear a beep, the iPhone audio path works and Kokoro's blob is the suspect. If no beep, the phone/browser is blocking audio.</span> <span id="shortVoiceStatus">Test short voice: generates only the word "Hi" with Kokoro Michael. If generation takes more than 30 seconds it will visibly report "generate timed out" instead of hanging on Stop forever.</span></div>
+    <div class="staging-note" id="stagingNote"><strong>STAGING ONLY — remove before live:</strong> <button type="button" id="testToneBtn">Test tone</button> <button type="button" id="testShortVoiceBtn">Test short voice</button> <span id="testToneStatus">Tap Test tone first: if you hear a beep, the iPhone audio path works. If no beep, the phone/browser is blocking audio.</span> <span id="shortVoiceStatus">Test short voice: generates only the word "Hi" with Piper Joe (en_US-joe-medium). If generation takes more than 30 seconds it will visibly report "generate timed out" instead of hanging on Stop forever.</span></div>
     <div class="staging-note" id="voiceDiag"><strong>STAGING ONLY — voice diagnostics:</strong> <span id="voiceDiagStatus">No voice played yet. After tapping Listen, this line shows, for each chunk: text length, blob bytes, decoded duration, sample rate, channels, peak amplitude, and AudioContext state.</span></div>
     <div class="hint">Powered by Llama 4 Scout through a secure proxy &mdash; no downloads, no key needed.</div>
   </div>
@@ -186,49 +186,36 @@ function addBubble(role, html, cls) {
   return div;
 }
 
-/* ---- STAGING ONLY: voice playback, VOICE DIAGNOSTICS ----
-   Diagnostic copy of the voice-fix staging page. Adds a visible
-   per-chunk diagnostic line (see voiceDiagStatus) and resumes the
-   AudioContext immediately before each chunk play. Nothing else
-   changed. REMOVE the Test tone button and this diagnostic line
-   before any live push.
+/* ---- STAGING ONLY: voice playback, PIPER ENGINE ----
    One small speaker button per Tiny Tim reply. Tap to read that reply
-   back, tap again to stop. No auto-play. Voice: Michael (Kokoro voice
-   id am_michael), Kokoro-82M, generated on-device via kokoro-js.
-   Loaded LAZILY on the first speaker tap only — nothing downloads at
-   page load. First tap downloads the ~92 MB model once, then the
-   browser caches it. If Kokoro cannot load, the button says so and
-   the text stays — there is deliberately NO silent fallback to a
-   different voice engine (speechSynthesis is NOT substituted), so a
-   failure is visible, not disguised. A device-voice fallback is a
-   separate option to discuss, not this fix.
-
-   Why the previous page could play silently on iPhone (hypothesis,
-   from the observed behaviour, not a proven fact): the old code used
-   a DETACHED element (new Audio(), never in the DOM), played a
-   silent clip inside the tap and immediately paused it, then tried
-   to reuse that same element 90+ seconds later, after the Kokoro
-   model download, to play the generated blob. On iOS Safari / the
-   Instagram in-app browser that combination can complete with
-   "ended" events and no error while producing no audible sound:
-   the tap blessing is long stale, a detached element has no
-   in-page audio session, and an <audio> element also follows the
-   ringer/silent routing. The old code also only checked that a
-   blob EXISTED, never that it had real audio bytes in it, so an
-   empty/short blob would also "play" silently to completion.
-   This fix therefore: (a) puts a real <audio> element in the DOM
-   and forces volume=1 / muted=false / playsInline on every play,
-   (b) rejects empty/short blobs instead of playing them silently,
-   and (c) plays Kokoro output primarily through Web Audio
-   (AudioContext resumed inside the tap, buffer decoded and played),
-   which does not rely on the stale detached-element blessing.
-   The DOM <audio> path remains only as a fallback if Web Audio
-   decoding fails. */
-const VOICE_ID = "am_michael"; // Michael, single voice only, male voice for Tiny Tim
-const KOKORO_MODEL = "onnx-community/Kokoro-82M-v1.0-ONNX";
-const KOKORO_SOURCES = ["https://cdn.jsdelivr.net/npm/kokoro-js@1.2.1/+esm", "https://esm.sh/kokoro-js@1.2.1"];
-const KOKORO_HOSTS = ["https://huggingface.co/", "https://hf-mirror.com/"];
-let kokoroPromise = null, kokoroTts = null;
+   back, tap again to stop. No auto-play. Single voice only, no picker:
+   Piper voice en_US-joe-medium (Joe, US male, medium, ~63 MB ONNX,
+   CC0 dataset licence), generated on-device via @mintplex-labs/piper-tts-web
+   (VITS CPU WASM, ONNX Runtime). Loaded LAZILY on the first speaker tap
+   only — nothing downloads at page load. First tap downloads the voice
+   once, then the browser caches it (Origin Private File System). If Piper
+   cannot load or generate, the button says so and the text stays — there
+   is deliberately NO silent fallback to a different voice engine
+   (speechSynthesis is NOT substituted), so a failure is visible, not
+   disguised.
+   Why Piper, not the previous engine: the previous engine timed out
+   generating even the single word "Hi" in 30 seconds on Evan's iPhone,
+   in both short-voice and Listen tests, while Test tone beeped. Piper
+   is a much smaller, CPU-first VITS model (~63 MB vs ~92 MB before),
+   with a documented real-time factor around 0.3 on Apple Silicon,
+   single thread — a better fit for iPhone Safari than the previous
+   82M-parameter model. This is still unproven on Evan's phone: the
+   short-voice test below is the proof, not a claim.
+   Playback is unchanged from the diagnostic build: a real <audio>
+   element in the DOM (volume=1 / muted=false / playsInline), empty/short
+   blobs rejected instead of played silently, and Piper output played
+   primarily through Web Audio (AudioContext resumed inside the tap and
+   again immediately before each chunk play, buffer decoded and played),
+   with the DOM <audio> path only as a fallback if Web Audio decoding
+   fails, labelled in the diagnostic line. */
+const PIPER_VOICE_ID = "en_US-joe-medium"; // Joe, single voice only, male voice for Tiny Tim
+const PIPER_SOURCES = ["https://cdn.jsdelivr.net/npm/@mintplex-labs/piper-tts-web@1.0.5/+esm", "https://esm.sh/@mintplex-labs/piper-tts-web@1.0.5"];
+let piperPromise = null, piperModule = null;
 let speechRun = 0, silentWavUrl = "", currentAudioUrl = "", activeSpeakBtn = null;
 let audioCtx = null, currentSource = null, currentTone = null;
 function getVoiceAudio() {
@@ -281,7 +268,7 @@ function stopSpeaking() {
 }
 function playTone() {
   // STAGING ONLY diagnostic. A short 880 Hz sine beep through Web Audio.
-  // If this beeps and Listen does not, Kokoro's blob/decode is the suspect.
+  // If this beeps and Listen does not, the voice engine's output is the suspect.
   // If this does not beep either, the phone/browser is blocking audio.
   const status = document.getElementById("testToneStatus");
   try {
@@ -306,30 +293,34 @@ function fmtTime(d) {
 function setShortVoiceStatus(text) {
   try { const el = document.getElementById("shortVoiceStatus"); if (el) el.textContent = text; } catch (e) {}
 }
-function generateWithTimeout(tts, text, ms) {
+function generateWithTimeout(piper, text, ms) {
   // 30s cap per chunk: a short reply that takes longer is already
   // broken by Evan's bar, so report a timeout instead of hanging
-  // on Stop forever. withTimeout() already exists in this file.
-  return withTimeout(Promise.resolve().then(function () { return tts.generate(text, { voice: VOICE_ID }); }), ms, "Kokoro generate");
+  // on Stop forever. piper-tts-web predict() returns a WAV Blob.
+  return withTimeout(Promise.resolve().then(function () { return piper.predict({ text: text, voiceId: PIPER_VOICE_ID }); }), ms, "Piper generate").then(function (out) {
+    if (out instanceof Blob) return out;
+    if (out && out.toBlob) return out.toBlob();
+    if (out && out.blob instanceof Blob) return out.blob;
+    throw new Error("the voice model returned no audio");
+  });
 }
 function testShortVoice() {
   // STAGING ONLY. Generates only the single word "Hi" — the smallest
-  // possible Kokoro job — so a hang cannot be blamed on a long reply.
+  // possible Piper job — so a hang cannot be blamed on a long reply.
   unlockAudio(); getAudioCtx();
   stopSpeaking();
   const started = new Date();
   setShortVoiceStatus("Test short voice: generating \"Hi\"… started " + fmtTime(started) + ". If this passes 30 seconds it will report generate timed out.");
   setVoiceDiag("Test short voice: generating \"Hi\"… started " + fmtTime(started) + ".");
   const run = speechRun;
-  loadKokoro().then(function (tts) {
+  loadPiper().then(function (piper) {
     if (run !== speechRun) return;
     const genStarted = new Date();
     setShortVoiceStatus("Test short voice: model loaded, generating \"Hi\"… generating started " + fmtTime(genStarted) + ".");
-    return generateWithTimeout(tts, "Hi", 30000).then(function (out) {
+    return generateWithTimeout(piper, "Hi", 30000).then(function (blob) {
       if (run !== speechRun) return;
       const genFinished = new Date();
       const secs = ((genFinished - genStarted) / 1000).toFixed(1);
-      const blob = out && out.toBlob ? out.toBlob() : null;
       if (!blob) throw new Error("the voice model returned no audio");
       setShortVoiceStatus("Test short voice: generate finished " + fmtTime(genFinished) + " (" + secs + "s after generating started) · blob " + blob.size + " bytes · playing…");
       return playAudioBlob(blob, run, "Hi", 1, 1).then(function () {
@@ -340,71 +331,38 @@ function testShortVoice() {
     if (run !== speechRun) return;
     const msg = err && err.message ? err.message : String(err);
     const timedOut = /timed out/i.test(msg);
-    setShortVoiceStatus("Test short voice: " + (timedOut ? "generate timed out after 30 seconds — Kokoro did not finish generating \"Hi\" in time." : "FAILED: " + msg));
+    setShortVoiceStatus("Test short voice: " + (timedOut ? "generate timed out after 30 seconds — Piper did not finish generating \"Hi\" in time." : "FAILED: " + msg));
     setVoiceDiag("Test short voice: " + (timedOut ? "generate timed out after 30 seconds." : "FAILED: " + msg));
   });
 }
-function cleanForSpeech(text) {
-  return String(text || "")
-    .replace(/```[\s\S]*?```/g, " code block omitted. ")
-    .replace(/`([^`]+)`/g, "$1")
-    .replace(/\*\*([^*]+)\*\*/g, "$1")
-    .replace(/<sub>([^<]*)<\/sub>/g, " sub $1")
-    .replace(/<sup>([^<]*)<\/sup>/g, " super $1")
-    .replace(/<[^>]+>/g, " ")
-    .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1")
-    .replace(/[*_#>]/g, " ")
-    .replace(/\s+/g, " ").trim();
-}
-function splitForSpeech(text) {
-  const parts = []; let cur = "";
-  const sentences = String(text).match(/[^.!?]+[.!?]*\s*/g) || [String(text)];
-  sentences.forEach(function (sent) {
-    if (cur && (cur + " " + sent).trim().length > 240) { parts.push(cur.trim()); cur = sent; }
-    else cur = cur ? cur + " " + sent : sent;
-  });
-  if (cur.trim()) parts.push(cur.trim());
-  return parts.length ? parts : [String(text)];
-}
-function loadKokoro() {
-  if (kokoroTts) return Promise.resolve(kokoroTts);
-  if (!kokoroPromise) {
+function loadPiper() {
+  if (piperModule) return Promise.resolve(piperModule);
+  if (!piperPromise) {
     const failures = [];
     function trySource(i) {
-      if (i >= KOKORO_SOURCES.length) return Promise.reject(new Error("the Kokoro voice library failed to load — " + failures.join(" · ")));
-      const url = KOKORO_SOURCES[i];
-      return withTimeout(Promise.resolve().then(function () { return import(url); }), 60000, "Kokoro library import (" + url + ")")
+      if (i >= PIPER_SOURCES.length) return Promise.reject(new Error("the Piper voice library failed to load — " + failures.join(" · ")));
+      const url = PIPER_SOURCES[i];
+      return withTimeout(Promise.resolve().then(function () { return import(url); }), 60000, "Piper library import (" + url + ")")
         .then(function (mod) {
-          if (!mod || !mod.KokoroTTS) throw new Error("the module loaded but exposed no KokoroTTS");
-          try {
-            if (mod.env) {
-              mod.env.allowLocalModels = false; mod.env.useBrowserCache = true;
-              if (mod.env.backends && mod.env.backends.onnx && mod.env.backends.onnx.wasm) {
-                mod.env.backends.onnx.wasm.wasmPaths = "https://cdn.jsdelivr.net/npm/onnxruntime-web@1.22.0/dist/";
-                mod.env.backends.onnx.wasm.numThreads = 1; mod.env.backends.onnx.wasm.proxy = false;
-              }
-            }
-          } catch (e) {}
+          if (!mod || typeof mod.predict !== "function") throw new Error("the module loaded but exposed no predict function");
+          // Download (and cache) the voice before first use, as the
+          // library's own README recommends. predict() would download
+          // anyway, but an explicit download gives a visible, timed
+          // load failure instead of a silent first-generate hang.
+          if (typeof mod.download === "function") {
+            return withTimeout(Promise.resolve().then(function () { return mod.download(PIPER_VOICE_ID); }), 300000, "Piper voice download").then(function () { return mod; });
+          }
           return mod;
         })
         .catch(function (err) { failures.push(url + " → " + (err && err.message ? err.message : err)); return trySource(i + 1); });
     }
-    function tryModel(mod, hostIdx) {
-      const host = KOKORO_HOSTS[hostIdx % KOKORO_HOSTS.length];
-      try { mod.env.remoteHost = host; mod.env.remotePath = "{model}/"; } catch (e) {}
-      return withTimeout(mod.KokoroTTS.from_pretrained(KOKORO_MODEL, { dtype: "q8", device: "wasm" }), 300000, "Kokoro model download")
-        .catch(function (err) {
-          if (hostIdx < KOKORO_HOSTS.length - 1) return tryModel(mod, hostIdx + 1);
-          throw new Error(KOKORO_MODEL + " could not load from " + host + " — " + (err && err.message ? err.message : err));
-        });
-    }
-    kokoroPromise = trySource(0).then(function (mod) { return tryModel(mod, 0); }).then(function (tts) { kokoroTts = tts; return tts; });
-    kokoroPromise.catch(function () { if (kokoroPromise) kokoroPromise = null; });
+    piperPromise = trySource(0).then(function (mod) { piperModule = mod; return mod; });
+    piperPromise.catch(function () { if (piperPromise) piperPromise = null; });
   }
-  return kokoroPromise;
+  return piperPromise;
 }
 function playAudioBlobWebAudio(blob, run, chunkText, chunkIndex, chunkTotal) {
-  // Primary path: decode the Kokoro blob in an AudioContext resumed
+  // Primary path: decode the Piper blob in an AudioContext resumed
   // immediately before each chunk play (not only at tap time), then
   // play the decoded buffer. Diagnostics for every chunk are written
   // to the visible staging diagnostic line, including peak amplitude:
@@ -497,7 +455,7 @@ function addSpeakButton(bubble, rawText) {
     if (activeSpeakBtn === btn) { stopSpeaking(); return; }
     stopSpeaking(); activeSpeakBtn = btn; btn.classList.add("playing"); btn.textContent = "Loading voice…";
     const run = speechRun;
-    loadKokoro().then(function (tts) {
+    loadPiper().then(function (piper) {
       if (run !== speechRun) return;
       btn.textContent = "Stop";
       const chunks = splitForSpeech(clean); let chain = Promise.resolve();
@@ -505,9 +463,8 @@ function addSpeakButton(bubble, rawText) {
         chain = chain.then(function () {
           if (run !== speechRun) return;
           setVoiceDiag("Generating chunk " + (chunkIndex + 1) + "/" + chunks.length + "… started " + fmtTime(new Date()) + ". If this passes 30 seconds it will report generate timed out instead of hanging on Stop.");
-          return generateWithTimeout(tts, chunk, 30000).then(function (out) {
+          return generateWithTimeout(piper, chunk, 30000).then(function (blob) {
             if (run !== speechRun) return;
-            const blob = out && out.toBlob ? out.toBlob() : null;
             if (!blob) throw new Error("the voice model returned no audio");
             return playAudioBlob(blob, run, chunk, chunkIndex + 1, chunks.length);
           });
@@ -518,7 +475,7 @@ function addSpeakButton(bubble, rawText) {
       if (run !== speechRun) return;
       stopSpeaking();
       btn.textContent = "Voice failed — tap to retry"; btn.title = err && err.message ? err.message : String(err);
-      if (/timed out/i.test(err && err.message ? err.message : String(err))) setVoiceDiag("Listen: generate timed out after 30 seconds — Kokoro did not finish generating a chunk in time, so playback stopped instead of hanging on Stop.");
+      if (/timed out/i.test(err && err.message ? err.message : String(err))) setVoiceDiag("Listen: generate timed out after 30 seconds — Piper did not finish generating a chunk in time, so playback stopped instead of hanging on Stop.");
     });
   });
   row.appendChild(btn); bubble.appendChild(row);
