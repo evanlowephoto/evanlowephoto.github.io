@@ -233,7 +233,7 @@ function stopSpeaking() {
   try { if (currentTone) { try { currentTone.stop(); } catch (e) {} currentTone = null; } } catch (e) {}
   const a = getVoiceAudio(); if (a) { try { a.pause(); } catch (e) {} }
   if (currentAudioUrl) { try { URL.revokeObjectURL(currentAudioUrl); } catch (e) {} currentAudioUrl = ""; }
-  if (activeSpeakBtn) { activeSpeakBtn.textContent = "Listen"; activeSpeakBtn.classList.remove("playing"); activeSpeakBtn = null; }
+  if (activeSpeakBtn) { activeSpeakBtn.textContent = "Tap here to listen"; activeSpeakBtn.classList.remove("playing"); activeSpeakBtn = null; }
 }
 function playTone() {
   const status = document.getElementById("testToneStatus");
@@ -471,7 +471,7 @@ function addSpeakButton(bubble, rawText) {
   if (!clean) return;
   const row = document.createElement("div"); row.className = "speak-row";
   const btn = document.createElement("button"); btn.type = "button"; btn.className = "speak-btn";
-  btn.textContent = "Listen"; btn.setAttribute("aria-label", "Read this reply aloud");
+  btn.textContent = "Tap here to listen"; btn.setAttribute("aria-label", "Tap here to listen");
   btn.addEventListener("click", function () {
     unlockAudio(); getAudioCtx(); // must run synchronously inside this tap
     if (activeSpeakBtn === btn) { stopSpeaking(); return; }
