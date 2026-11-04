@@ -1,6 +1,31 @@
 <!doctype html>
 <html lang="en">
 <head>
+<style>
+#tt-bubble{position:fixed;right:20px;bottom:20px;z-index:9999;display:flex;flex-direction:column;align-items:flex-end;gap:10px}
+  #tt-launch{width:40px;height:40px;border-radius:50%;border:2px solid #fff;background:#a56e00;padding:0;cursor:pointer;box-shadow:0 6px 20px rgba(0,0,0,.35);overflow:hidden}
+  #tt-launch img{width:100%;height:100%;object-fit:cover;display:block}
+  #tt-teaser{max-width:260px;background:#fff;color:#121411;border-radius:14px;padding:12px 14px;box-shadow:0 6px 20px rgba(0,0,0,.3);font-size:15px;line-height:1.45}
+  #tt-teaser button{float:right;background:none;border:none;font-size:16px;cursor:pointer;color:#5d625a;margin-left:8px}
+  #tt-panel{display:none;width:min(300px,calc(100vw - 32px));height:380px;max-height:60vh;background:#fff;color:#121411;border-radius:16px;box-shadow:0 10px 30px rgba(0,0,0,.35);overflow:hidden;flex-direction:column}
+  #tt-panel.open{display:flex}
+  #tt-panel-head{display:flex;align-items:center;gap:10px;background:#121411;color:#fff;padding:12px 14px}
+  #tt-panel-head img{width:40px;height:40px;border-radius:50%;object-fit:cover}
+  #tt-panel-head strong{font-size:16px}
+  #tt-panel-head span{font-size:12px;color:#cfd1c9}
+  #tt-panel-head button{margin-left:auto;background:none;border:none;color:#fff;font-size:20px;cursor:pointer}
+  #tt-msgs{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:10px;background:#f7f5ef}
+  .tt-msg{max-width:88%;padding:10px 12px;border-radius:14px;font-size:15px;line-height:1.5;white-space:pre-wrap;word-wrap:break-word}
+  .tt-in{background:#fff;align-self:flex-start;border:1px solid #e2e0d8}
+  .tt-out{background:#121411;color:#fff;align-self:flex-end}
+  .tt-sys{background:#fff3cd;border:1px solid #e6c87a;align-self:stretch;text-align:center;font-size:14px}
+  .tt-err{background:#fdecea;border:1px solid #e6a0a0;align-self:stretch}
+  #tt-form{display:flex;gap:8px;padding:10px;border-top:1px solid #e2e0d8;background:#fff}
+  #tt-input{flex:1;min-width:0;padding:10px 12px;border:1px solid #cfd1c9;border-radius:20px;font:inherit;font-size:15px}
+  #tt-send{padding:10px 16px;border:none;border-radius:20px;background:#a56e00;color:#fff;font-weight:700;cursor:pointer}
+  #tt-send:disabled,#tt-input:disabled{opacity:.45;cursor:not-allowed}
+  #tt-foot{padding:6px 12px 10px;background:#fff;font-size:12px;color:#5d625a;display:flex;justify-content:space-between;gap:8px}
+</style>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="color-scheme" content="light dark">
@@ -612,5 +637,97 @@
       });
     }());
   </script>
+<div id="tt-bubble" aria-label="Tiny Tim chat bubble">
+  <div id="tt-teaser" role="note">Hi, I'm Tiny Tim. I'm here to chat.<button id="tt-teaser-close" type="button" aria-label="Dismiss greeting">×</button></div>
+  <div id="tt-panel" role="dialog" aria-label="Chat with Tiny Tim">
+    <div id="tt-panel-head">
+      <img id="tt-avatar-head" alt="Tiny Tim avatar">
+      <div><strong>Tiny Tim</strong><br><span>Text chat only</span></div>
+      <button id="tt-close" type="button" aria-label="Close chat">×</button>
+    </div>
+    <div id="tt-msgs" aria-live="polite"></div>
+    <form id="tt-form">
+      <input id="tt-input" type="text" autocomplete="off" placeholder="Type a message…" aria-label="Type a message to Tiny Tim">
+      <button id="tt-send" type="submit">Send</button>
+    </form>
+    <div id="tt-foot"><span id="tt-count"></span></div>
+  </div>
+  <button id="tt-launch" type="button" aria-label="Open Tiny Tim chat"><img id="tt-avatar-launch" alt="Tiny Tim"></button>
+</div>
+
+<script>
+
+var WORKER_URL = "https://echo-chat-llama-proxy.evan996.workers.dev/v1/chat/completions";
+var MODEL = "meta-llama/Llama-4-Scout-17B-16E-Instruct";
+var SYSTEM_PROMPT = "You are Tiny Tim, a helpful assistant in a small text chat bubble on a photography website, powered by Meta's Llama model. Answer clearly and concisely in text only. You cannot see or receive pictures in this chat, so do not ask for one. If asked about the site's prints, the sizes are 8x10 $100, 11x14 $200, 16x20 $350.";
+var LIMIT = 10;
+var KEY = "tinyTimBubbleChats";
+var AVATAR = "data:image/webp;base64,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";
+document.getElementById("tt-avatar-launch").src = AVATAR;
+document.getElementById("tt-avatar-head").src = AVATAR;
+var msgsEl = document.getElementById("tt-msgs");
+var inputEl = document.getElementById("tt-input");
+var sendBtn = document.getElementById("tt-send");
+var countEl = document.getElementById("tt-count");
+var panel = document.getElementById("tt-panel");
+var teaser = document.getElementById("tt-teaser");
+var chatHistory = [];
+function todayStr(){ var d = new Date(); return d.getFullYear() + "-" + ("0"+(d.getMonth()+1)).slice(-2) + "-" + ("0"+d.getDate()).slice(-2); }
+function loadCount(){
+  try { var raw = localStorage.getItem(KEY); if (!raw) return {date: todayStr(), count: 0};
+    var v = JSON.parse(raw); if (v.date !== todayStr()) return {date: todayStr(), count: 0}; return v;
+  } catch (e) { return {date: todayStr(), count: 0}; }
+}
+function saveCount(v){ try { localStorage.setItem(KEY, JSON.stringify(v)); } catch (e) {} }
+var counter = loadCount();
+function esc(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+function addMsg(text, cls){ var d = document.createElement("div"); d.className = "tt-msg " + cls; d.innerHTML = esc(text).replace(/\n/g,"<br>"); msgsEl.appendChild(d); msgsEl.scrollTop = msgsEl.scrollHeight; return d; }
+function refreshCount(){
+  countEl.textContent = counter.count + " of " + LIMIT + " chats today";
+  var atLimit = counter.count >= LIMIT;
+  inputEl.disabled = atLimit; sendBtn.disabled = atLimit;
+}
+function enforceLimit(){
+  if (counter.count >= LIMIT) { addMsg("You've reached your daily limit.", "tt-sys"); refreshCount(); return true; }
+  return false;
+}
+addMsg("Hi, I'm Tiny Tim. I'm here to chat.", "tt-in");
+if (counter.count >= LIMIT) { addMsg("You've reached your daily limit.", "tt-sys"); }
+refreshCount();
+document.getElementById("tt-launch").addEventListener("click", function(){ panel.classList.toggle("open"); if (panel.classList.contains("open")) { teaser.style.display = "none"; inputEl.focus(); } });
+document.getElementById("tt-close").addEventListener("click", function(){ panel.classList.remove("open"); });
+document.getElementById("tt-teaser-close").addEventListener("click", function(){ teaser.style.display = "none"; });
+document.getElementById("tt-form").addEventListener("submit", async function(e){
+  e.preventDefault();
+  var text = inputEl.value.trim();
+  if (!text || inputEl.disabled) return;
+  if (enforceLimit()) return;
+  inputEl.value = "";
+  addMsg(text, "tt-out");
+  chatHistory.push({role: "user", content: text});
+  counter.count += 1; saveCount(counter);
+  var thinking = addMsg("Thinking…", "tt-in");
+  sendBtn.disabled = true;
+  try {
+    var payload = { model: MODEL, messages: [{role: "system", content: SYSTEM_PROMPT}].concat(chatHistory.slice(-10)), temperature: 0.7, max_tokens: 1024 };
+    var res = await fetch(WORKER_URL, { method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify(payload) });
+    if (!res.ok) throw new Error("http" + res.status);
+    var data = await res.json();
+    var msg = data && data.choices && data.choices[0] && data.choices[0].message;
+    var reply = msg && msg.content;
+    if (typeof reply !== "string" || !reply.trim()) throw new Error("empty");
+    thinking.remove();
+    addMsg(reply, "tt-in");
+    chatHistory.push({role: "assistant", content: reply});
+  } catch (err) {
+    thinking.remove();
+    addMsg("Something went wrong reaching Tiny Tim. Please try again.", "tt-err");
+  } finally {
+    if (counter.count >= LIMIT) { addMsg("You've reached your daily limit.", "tt-sys"); }
+    refreshCount();
+  }
+});
+
+</script>
 </body>
 </html>
