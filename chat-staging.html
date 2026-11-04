@@ -105,7 +105,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Ar
       <button class="send-btn" id="sendBtn" title="Send" aria-label="Send">&uarr;</button>
     </div>
     <audio id="voiceAudio" playsinline preload="auto" style="position:absolute;width:1px;height:1px;opacity:0;pointer-events:none" aria-hidden="true"></audio>
-    <div class="staging-note" id="stagingNote"><strong>STAGING ONLY — remove before live:</strong> <button type="button" id="testToneBtn">Test tone</button> <button type="button" id="testShortVoiceBtn">Test short voice</button> <span id="testToneStatus">Tap Test tone first: if you hear a beep, the iPhone audio path works. If no beep, the phone/browser is blocking audio.</span> <span id="shortVoiceStatus">Test short voice: generates only the word Hi with sanoTTS hfc, slower again (lengthScale 1.28, about 10% slower than the 1.15 version). If generation takes more than 30 seconds it will visibly report generate timed out instead of hanging on Stop forever.</span></div>
+    <div class="staging-note" id="stagingNote"><strong>STAGING ONLY — remove before live:</strong> <button type="button" id="testToneBtn">Test tone</button> <button type="button" id="testShortVoiceBtn">Test short voice</button> <span id="testToneStatus">Tap Test tone first: if you hear a beep, the iPhone audio path works. If no beep, the phone/browser is blocking audio.</span> <span id="shortVoiceStatus">Test short voice: generates only the word Hi with sanoTTS hfc, lengthScale 1.40. If generation takes more than 30 seconds it will visibly report generate timed out instead of hanging on Stop forever.</span></div>
     <div class="staging-note" id="voiceDiag"><strong>STAGING ONLY — voice diagnostics:</strong> <span id="voiceDiagStatus">No voice played yet. After tapping Listen, this line shows, for each chunk: text length, blob bytes, decoded duration, sample rate, channels, peak amplitude, and AudioContext state.</span></div>
     <div class="hint">Powered by Llama 4 Scout through a secure proxy &mdash; no downloads, no key needed.</div>
   </div>
@@ -363,7 +363,7 @@ function playAudioBlob(blob, run, chunkText, chunkIndex, chunkTotal) {
    over the wire per the project README).
    Voice: hfc, English, gender undocumented — ear-judgement test only, do NOT label male
    (SCOREQ 4.13 / UTMOS 4.10 in the project README), ~3 MB fp16 / 5.6 MB fp32.
-   This variant: hfc, slower again — lengthScale 1.28 overrides the voice's
+   This variant: hfc, lengthScale 1.40 overrides the voice's
    default speaking rate (longer phoneme durations), per the sanotts-web API.
    HONEST FLAG: sanoTTS publishes NO documented male English voice.
    kristin is female-named, hfc/heart/heart-nano gender is undocumented
@@ -380,7 +380,7 @@ function playAudioBlob(blob, run, chunkText, chunkIndex, chunkTotal) {
    so a failure is visible, not silent. No speechSynthesis substitution.
    First tap downloads the WASM runtime + hfc voice once, then caches. */
 const SANO_VOICE = "hfc";
-const SANO_LENGTH_SCALE = 1.28;
+const SANO_LENGTH_SCALE = 1.40;
 const SANO_SOURCES = ["https://cdn.jsdelivr.net/npm/sanotts-web@latest/+esm", "https://esm.sh/sanotts-web@latest"];
 let sanoPromise = null, sanoTts = null;
 function loadVoiceEngine() {
