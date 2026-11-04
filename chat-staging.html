@@ -1,5 +1,5 @@
 <!doctype html>
-<!-- STAGING ONLY \u2014 Chatterbox Turbo VOICE, not live. Non-ONNX WASM engine (see engine comment in script). Single voice amy; see flag: no documented male English Chatterbox Turbo voice. Live chat.html untouched. REMOVE all staging buttons/diagnostics before any live push. -->
+<!-- STAGING ONLY -- Phonon TTS VOICE, not live. Rust WASM engine, NO ONNX Runtime (see engine comment in script). Single voice Easton; gender NOT documented for any Phonon voice checked, do NOT label Easton male. Live chat.html untouched. REMOVE all staging buttons/diagnostics before any live push. -->
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -105,7 +105,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Ar
       <button class="send-btn" id="sendBtn" title="Send" aria-label="Send">&uarr;</button>
     </div>
     <audio id="voiceAudio" playsinline preload="auto" style="position:absolute;width:1px;height:1px;opacity:0;pointer-events:none" aria-hidden="true"></audio>
-    <div class="staging-note" id="stagingNote"><strong>STAGING ONLY — remove before live:</strong> <button type="button" id="testToneBtn">Test tone</button> <button type="button" id="testShortVoiceBtn">Test short voice</button> <span id="testToneStatus">Tap Test tone first: if you hear a beep, the iPhone audio path works. If no beep, the phone/browser is blocking audio.</span> <span id="shortVoiceStatus">Test short voice: EXPERIMENTAL — Chatterbox Turbo built-in voice (gender NOT documented, do NOT label male). Button fixed 2026-11-03 (testShortVoice was previously missing); no finished browser engine yet, so expect a labelled incomplete-pipeline failure, not speech. If generation takes more than 30 seconds it will visibly report generate timed out instead of hanging on Stop forever.</span></div>
+    <div class="staging-note" id="stagingNote"><strong>STAGING ONLY — remove before live:</strong> <button type="button" id="testToneBtn">Test tone</button> <button type="button" id="testShortVoiceBtn">Test short voice</button> <span id="testToneStatus">Tap Test tone first: if you hear a beep, the iPhone audio path works. If no beep, the phone/browser is blocking audio.</span> <span id="shortVoiceStatus">Test short voice: generates only the word Hi with Phonon Easton (gender NOT documented, do NOT label male). If generation takes more than 30 seconds it will visibly report generate timed out instead of hanging on Stop forever.</span></div>
     <div class="staging-note" id="voiceDiag"><strong>STAGING ONLY — voice diagnostics:</strong> <span id="voiceDiagStatus">No voice played yet. After tapping Listen, this line shows, for each chunk: text length, blob bytes, decoded duration, sample rate, channels, peak amplitude, and AudioContext state.</span></div>
     <div class="hint">Powered by Llama 4 Scout through a secure proxy &mdash; no downloads, no key needed.</div>
   </div>
@@ -250,34 +250,6 @@ function playTone() {
     if (status) status.textContent = "Test tone failed: " + (err && err.message ? err.message : String(err));
   }
 }
-function testShortVoice() {
-  // FIX (2026-11-03): this function was previously referenced by the
-  // Test short voice button but never defined, so registering the click
-  // handler threw a ReferenceError, init aborted, and the button did
-  // nothing. It is now defined, so a tap always writes a verbatim status.
-  // It still cannot produce speech: loadVoiceEngine only creates the q4
-  // language-model session, and its synthesize() deliberately rejects
-  // with the labelled incomplete-pipeline error (no finished JS wrapper
-  // wiring tokenizer + T3 sampling + conditional_decoder + speaker
-  // conditioning). That rejection is surfaced here, not hidden.
-  const started = new Date();
-  setShortVoiceStatus("Test short voice: generating 'Hi' with Chatterbox Turbo… started " + fmtTime(started) + ". If this passes 30 seconds it will report generate timed out instead of hanging.");
-  setVoiceDiag("Test short voice: generating 'Hi' with Chatterbox Turbo… started " + fmtTime(started) + ".");
-  try { unlockAudio(); getAudioCtx(); } catch (e) {}
-  loadVoiceEngine().then(function (engine) {
-    return generateWithTimeout(engine, "Hi", 30000);
-  }).then(function (blob) {
-    if (!blob) throw new Error("the voice model returned no audio");
-    return playAudioBlob(blob, speechRun, "Hi", 1, 1).then(function () {
-      const finished = new Date();
-      setShortVoiceStatus("Test short voice: DONE — generating started " + fmtTime(started) + ", generate finished " + fmtTime(finished) + " · blob " + blob.size + " bytes · played to the end. Did you hear \"Hi\"?");
-    });
-  }).catch(function (err) {
-    const msg = err && err.message ? err.message : String(err);
-    setShortVoiceStatus("Test short voice: FAILED: " + msg);
-    setVoiceDiag("Test short voice: FAILED: " + msg);
-  });
-}
 function fmtTime(d) {
   try {
     const h = String(d.getHours()).padStart(2, "0"), m = String(d.getMinutes()).padStart(2, "0"), s = String(d.getSeconds()).padStart(2, "0");
@@ -381,89 +353,120 @@ function playAudioBlob(blob, run, chunkText, chunkIndex, chunkTotal) {
   });
 }
 
-/* ---- STAGING ONLY: voice playback, CHATTERBOX TURBO — EXPERIMENTAL, NOT A WORKING VOICE ----
-   EXPERIMENTAL HONEST LABEL: this file does NOT contain a finished browser
-   Chatterbox engine, because no finished browser build exists as of this
-   writing. What exists: Resemble AI Chatterbox Turbo, MIT, 350M params,
-   Hugging Face ResembleAI/chatterbox-turbo-ONNX, with a custom ONNX
-   Runtime Web integration only (no standard transformers.js TTS pipeline,
-   no browser demo in the research found). The ONNX export lists
-   speech_encoder, embed_tokens, conditional_decoder and language_model
-   (q4 ~350 MB; total download ~691 MB per a local-app doc; repo 7.39 GB),
-   plus default_voice.wav. CORRECTION (2026-11-03): conditional_decoder
-   IS the S3Gen decoder (mel synthesis + HiFTNet-style vocoder), so the
-   missing piece is NOT a separate vocoder file — it is a finished JS
-   wrapper wiring tokenizer + T3 autoregressive sampling + the
-   conditional_decoder + speaker conditioning from a reference clip.
-   No such wrapper ships in this file, and no published, reusable
-   browser demo/wrapper for Turbo was found in this check (one product
-   claims a WebGPU Turbo clone in-browser, ~560 MB, but its code was
-   not verified as reusable here, and iPhone Safari WebGPU is iOS 26+
-   only). One community ONNX adapter also reports Turbo as not yet
-   supported and producing unintelligible output through its
-   base-model path.
-   Voice: built-in default_voice.wav ONLY. No documented male preset
-   voice exists for Turbo; cloning a male voice would need a male
-   reference clip, which this page does not have and does not fabricate.
-   Do NOT label the built-in voice male. Gender is undocumented.
-   Threaded-ORT avoidance: this build pins ONNX Runtime Web to
-   numThreads=1, proxy=false, executionProviders ["webgpu","wasm"]
-   (WebGPU first, single-thread WASM fallback) and never requests
-   threads, so it should NOT load ort-wasm-simd-threaded.jsep.mjs.
-   Whether that avoids the Pages COOP/COEP / SharedArrayBuffer blocker
-   is unproven until a browser test runs it.
-   What this build actually does: loadVoiceEngine imports
-   onnxruntime-web, pins single-thread WASM, creates the q4 language
-   model session, then synthesize() THROWS a visible, labelled
-   "incomplete pipeline" error (no finished JS generation wrapper).
-   Test short voice (now defined, previously missing — see
-   testShortVoice) / Listen therefore show FAILED with that exact
-   reason instead of hanging, timing out silently, or pretending to
-   speak. If a future builder adds the full Turbo wrapper
-   (tokenizer + T3 sampling + conditional_decoder + speaker
-   conditioning), replace synthesize() — do not remove this label
-   until speech is actually generated.
-   No speechSynthesis substitution. Live chat.html untouched.
-   REMOVE all staging buttons/diagnostics before any live push. */
-const CHATTERBOX_MODEL = "ResembleAI/chatterbox-turbo-ONNX";
-const CHATTERBOX_LM_URL = "https://huggingface.co/ResembleAI/chatterbox-turbo-ONNX/resolve/main/onnx/language_model_q4.onnx";
-const ORT_SOURCES = ["https://cdn.jsdelivr.net/npm/onnxruntime-web@1.22.0/dist/ort.webgpu.min.js", "https://cdn.jsdelivr.net/npm/onnxruntime-web/dist/ort.min.js", "https://esm.sh/onnxruntime-web@1.22.0"];
-let chatterPromise = null, chatterEngine = null;
+/* ---- STAGING ONLY: voice playback, Phonon TTS ENGINE ----
+   Phonon (Gradium, 31M English model, Apache 2.0): Rust inference engine
+   compiled to WebAssembly, NO ONNX Runtime at all. This is why it may
+   sidestep the failure that killed Piper, Kitten and Chatterbox Turbo on
+   GitHub Pages: those engines load ort-wasm-simd-threaded.jsep.mjs, and
+   threaded WASM needs SharedArrayBuffer / COOP-COEP headers that GitHub
+   Pages cannot set. Phonon never loads any ort-wasm-*.jsep.mjs file.
+   Model: Phonon 31m English, ~64.5 MB q8 weights (parent brief: ~65 MB
+   download once, $0, cached after first load). Output: mono 24 kHz.
+   API (phonon-tts npm README, as quoted in public write-ups):
+   import { PhononTTS } from 'phonon-tts';
+   const tts = await PhononTTS.load({ lang: 'en' });
+   await tts.synthWav(text)  // returns a WAV
+   // or: for await (const chunk of tts.stream(text)) // Float32Array, 24 kHz
+   VOICES — HONEST FLAG: documented Phonon voice names found in public
+   sources (Gradium release, Medium hands-on, Micdrop docs) are Easton,
+   Freya, Zoey, Harper, Sterling, Toby (31m catalog reported as 37 voices;
+   full catalog lives at gradium/phonon-voices). NONE of those sources
+   documents a gender for any of these voices. This build therefore picks
+   Easton ONLY because it is the documented example voice in both the CLI
+   and Node constructor examples — NOT because of any gender claim.
+   Do NOT label Easton male. If a male voice is required, it must come
+   from a documented male voice or a male reference-cloned voice file,
+   neither of which is in this file.
+   Load strategy: try PhononTTS.load({lang:'en', voice:'Easton'}) first;
+   if the browser package rejects a voice option, fall back to
+   PhononTTS.load({lang:'en'}). Synthesis: prefer synthWav(), fall back
+   to collecting stream() chunks into a WAV via wavBlobFromSamples().
+   No speechSynthesis substitution. First tap downloads model + voice
+   once, then caches. */
+const PHONON_VOICE = "Easton";
+const PHONON_SOURCES = ["https://cdn.jsdelivr.net/npm/phonon-tts@latest/+esm", "https://esm.sh/phonon-tts@latest"];
+let phononPromise = null, phononTts = null;
 function loadVoiceEngine() {
-  if (chatterEngine) return Promise.resolve(chatterEngine);
-  if (!chatterPromise) {
+  if (phononTts) return Promise.resolve(phononTts);
+  if (!phononPromise) {
     const failures = [];
     function trySource(i) {
-      if (i >= ORT_SOURCES.length) return Promise.reject(new Error("the Chatterbox voice library failed to load \u2014 " + failures.join(" \u00b7 ")));
-      const url = ORT_SOURCES[i];
-      return withTimeout(Promise.resolve().then(function () { return import(url); }), 60000, "onnxruntime-web import (" + url + ")")
+      if (i >= PHONON_SOURCES.length) return Promise.reject(new Error("the Phonon voice library failed to load — " + failures.join(" · ")));
+      const url = PHONON_SOURCES[i];
+      return withTimeout(Promise.resolve().then(function () { return import(url); }), 60000, "Phonon library import (" + url + ")")
         .then(function (mod) {
-          const ort = mod && (mod.InferenceSession ? mod : (mod.default || null));
-          if (!ort || typeof ort.InferenceSession.create !== "function") throw new Error("onnxruntime-web loaded but exposed no InferenceSession.create");
-          try {
-            if (ort.env && ort.env.wasm) { ort.env.wasm.numThreads = 1; ort.env.wasm.proxy = false; }
-          } catch (e) {}
-          return withTimeout(Promise.resolve().then(function () {
-            return ort.InferenceSession.create(CHATTERBOX_LM_URL, { executionProviders: ["webgpu", "wasm"] });
-          }), 300000, "Chatterbox language-model session load").then(function (session) {
-            return {
-              session: session,
-              synthesize: function () {
-                return Promise.reject(new Error("EXPERIMENTAL — incomplete pipeline: Chatterbox Turbo ONNX language-model session loaded, but there is no finished browser generation wrapper (tokenizer + T3 sampling + conditional_decoder + speaker conditioning), so no speech can be generated yet. This is not a working voice; do not promote it live."));
-              }
-            };
-          });
+          const PhononTTS = mod && (mod.PhononTTS || (mod.default && (mod.default.PhononTTS || mod.default)));
+          if (!PhononTTS || typeof PhononTTS.load !== "function") throw new Error("the module loaded but exposed no PhononTTS.load function");
+          return withTimeout(Promise.resolve().then(function () { return PhononTTS.load({ lang: "en", voice: PHONON_VOICE }); }), 300000, "Phonon runtime load (voice " + PHONON_VOICE + ")")
+            .catch(function (voiceErr) {
+              // Browser package may not accept a voice option; retry without it.
+              return withTimeout(Promise.resolve().then(function () { return PhononTTS.load({ lang: "en" }); }), 300000, "Phonon runtime load (no voice option)");
+            }).then(function (tts) {
+              if (!tts || (typeof tts.synthWav !== "function" && typeof tts.stream !== "function")) throw new Error("Phonon loaded but exposed no synthWav or stream function");
+              return tts;
+            });
         })
-        .catch(function (err) { failures.push(url + " \u2192 " + (err && err.message ? err.message : err)); return trySource(i + 1); });
+        .catch(function (err) { failures.push(url + " → " + (err && err.message ? err.message : err)); return trySource(i + 1); });
     }
-    chatterPromise = trySource(0).then(function (eng) { chatterEngine = eng; return eng; });
-    chatterPromise.catch(function () { if (chatterPromise) chatterPromise = null; });
+    phononPromise = trySource(0).then(function (tts) { phononTts = tts; return tts; });
+    phononPromise.catch(function () { if (phononPromise) phononPromise = null; });
   }
-  return chatterPromise;
+  return phononPromise;
 }
-function generateWithTimeout(engine, text, ms) {
-  return withTimeout(Promise.resolve().then(function () { return engine.synthesize(text); }), ms, "Chatterbox generate");
+function generateWithTimeout(tts, text, ms) {
+  return withTimeout(Promise.resolve().then(function () {
+    if (typeof tts.synthWav === "function") return tts.synthWav(text);
+    if (typeof tts.stream === "function") {
+      // Collect streamed Float32Array chunks (24 kHz) into one WAV.
+      return (async function () {
+        const chunks = []; let total = 0;
+        for await (const chunk of tts.stream(text)) { chunks.push(chunk); total += chunk.length; }
+        const all = new Float32Array(total); let off = 0;
+        chunks.forEach(function (c) { all.set(c, off); off += c.length; });
+        return all;
+      })();
+    }
+    throw new Error("Phonon loaded but exposed no synthWav or stream function");
+  }), ms, "Phonon generate").then(function (out) {
+    if (out instanceof Blob) {
+      if (!out.size) throw new Error("the voice model returned no audio");
+      return out;
+    }
+    if (out instanceof ArrayBuffer || out instanceof Uint8Array) return new Blob([out], { type: "audio/wav" });
+    if (out && out.samples && out.samples.length) return wavBlobFromSamples(out.samples, out.sampleRate || 24000);
+    if (out instanceof Float32Array && out.length) return wavBlobFromSamples(out, 24000);
+    throw new Error("the voice model returned no usable audio");
+  });
 }
+function testShortVoice() {
+  unlockAudio(); getAudioCtx();
+  stopSpeaking();
+  const started = new Date();
+  setShortVoiceStatus("Test short voice: generating \"Hi\" with Phonon Easton… started " + fmtTime(started) + ". If this passes 30 seconds it will report generate timed out.");
+  setVoiceDiag("Test short voice: generating \"Hi\"… started " + fmtTime(started) + ".");
+  const run = speechRun;
+  loadVoiceEngine().then(function (tts) {
+    if (run !== speechRun) return;
+    const genStarted = new Date();
+    setShortVoiceStatus("Test short voice: Phonon loaded, generating \"Hi\"… generating started " + fmtTime(genStarted) + ".");
+    return generateWithTimeout(tts, "Hi", 30000).then(function (blob) {
+      if (run !== speechRun) return;
+      const genFinished = new Date();
+      const secs = ((genFinished - genStarted) / 1000).toFixed(1);
+      setShortVoiceStatus("Test short voice: generate finished " + fmtTime(genFinished) + " (" + secs + "s after generating started) · blob " + blob.size + " bytes · playing…");
+      return playAudioBlob(blob, run, "Hi", 1, 1).then(function () {
+        setShortVoiceStatus("Test short voice: DONE — generating started " + fmtTime(genStarted) + ", generate finished " + fmtTime(genFinished) + " (" + secs + "s) · blob " + blob.size + " bytes · played to the end. Did you hear \"Hi\"?");
+      });
+    });
+  }).catch(function (err) {
+    if (run !== speechRun) return;
+    const msg = err && err.message ? err.message : String(err);
+    const timedOut = /timed out/i.test(msg);
+    setShortVoiceStatus("Test short voice: " + (timedOut ? "generate timed out after 30 seconds — Phonon did not finish generating \"Hi\" in time." : "FAILED: " + msg));
+    setVoiceDiag("Test short voice: " + (timedOut ? "generate timed out after 30 seconds." : "FAILED: " + msg));
+  });
+}
+
 function cleanForSpeech(text) {
   return String(text || "")
     .replace(/```[\s\S]*?```/g, " code block omitted. ")
