@@ -1,0 +1,652 @@
+<!doctype html>
+<!-- STAGING ONLY \u2014 sanoTTS VOICE, not live. Non-ONNX WASM engine (see engine comment in script). Single voice hfc; see flag: gender undocumented, do NOT label male. Ear-judgement test only. Live chat.html untouched. REMOVE all staging buttons/diagnostics before any live push. -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<link rel="icon" href="data:,">
+<title>Tiny Tim — Chat</title>
+<style>
+:root{
+--bg:#f2f3f5; --surface:#ffffff; --surface2:#eef0f3; --text:#111318; --muted:#6b7280; --line:#e2e4e8;
+--blue:#0a84ff; --gray-bubble:#e9e9ec; --gray-text:#111318;
+--shadow:0 20px 50px rgba(0,0,0,.14), 0 2px 10px rgba(0,0,0,.08);
+}
+@media (prefers-color-scheme: dark){
+:root{ --bg:#0b0e13; --surface:#161a21; --surface2:#1e242e; --text:#f2f4f7; --muted:#9aa3af; --line:#262c36; --gray-bubble:#262b33; --gray-text:#f2f4f7; --shadow:0 20px 50px rgba(0,0,0,.5); }
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+html,body{overscroll-behavior-y:none}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--text);line-height:1.5;-webkit-font-smoothing:antialiased}
+.wrap{max-width:460px;margin:0 auto;padding:26px 16px 48px}
+/* PHONE */
+.phone-shell{background:var(--surface);border:1px solid var(--line);border-radius:38px;box-shadow:var(--shadow);overflow:hidden}
+.chat-header{display:flex;align-items:flex-start;justify-content:center;padding:14px 14px 6px}
+.agent{text-align:center;flex:1}
+.avatar-wrap{width:112px;height:112px;margin:0 auto}
+.avatar-emoji{width:112px;height:112px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:58px;border:1px solid var(--line);background:linear-gradient(135deg,#ffe9c7,#ffd2a6)}
+.agent-name{display:inline-block;margin-top:6px;background:var(--surface2);border:1px solid var(--line);padding:3px 10px;border-radius:999px;font-size:13px;font-weight:700;line-height:1}
+.status-row{display:flex;justify-content:center;flex-wrap:wrap;gap:6px;padding:8px 12px 4px}
+.status-pill{display:inline-flex;align-items:center;gap:7px;background:var(--surface2);border:1px solid var(--line);border-radius:999px;padding:6px 11px;font-size:12.5px;color:var(--muted);min-height:30px}
+.status-dot{width:7px;height:7px;border-radius:50%;background:#22c55e;flex:0 0 auto}
+.status-pill.working .status-dot{background:var(--blue);animation:pulse 1s infinite}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.45;transform:scale(.8)}}
+.time-label{text-align:center;font-size:11px;color:var(--muted);margin:6px 0 2px;font-weight:500}
+.messages{height:380px;overflow-y:auto;padding:10px 14px 14px;display:flex;flex-direction:column;gap:8px;scroll-behavior:smooth;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;touch-action:pan-y}
+.msg{max-width:82%;padding:9px 12px;border-radius:18px;font-size:14.5px;line-height:1.4;word-break:break-word}
+.msg.in{align-self:flex-start;background:var(--gray-bubble);color:var(--gray-text);border-bottom-left-radius:6px}
+.msg.out{align-self:flex-end;background:var(--blue);color:#fff;border-bottom-right-radius:6px}
+.msg.out a{color:#fff}
+.msg.error{align-self:flex-start;background:#fdeceb;color:#8a1f1a;border:1px solid #f3c1bd;border-bottom-left-radius:6px;font-size:13.5px}
+@media (prefers-color-scheme: dark){.msg.error{background:#3a1714;color:#ffb4ab;border-color:#5c2a24}}
+.msg pre{background:rgba(0,0,0,.16);border-radius:8px;padding:8px 10px;overflow-x:auto;font-size:12.5px;margin:6px 0;white-space:pre-wrap;word-break:break-word}
+.msg code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.92em}
+.msg p{margin:0 0 6px}
+.msg p:last-child{margin-bottom:0}
+.msg ul,.msg ol{margin:4px 0 6px;padding-left:18px}
+/* Picture bubbles */
+.pic-bubble{align-self:flex-end;max-width:82%;display:flex;flex-direction:column;gap:6px;align-items:flex-end}
+.pic-bubble img{max-width:100%;max-height:260px;border-radius:16px;border-bottom-right-radius:6px;display:block;object-fit:cover;cursor:zoom-in}
+.pic-bubble .cap{background:var(--blue);color:#fff;padding:9px 12px;border-radius:18px;border-bottom-right-radius:6px;font-size:14.5px;line-height:1.4;word-break:break-word}
+/* Composer */
+.thumb-strip{display:flex;gap:8px;padding:10px 12px 0;flex-wrap:wrap}
+.thumb-strip[hidden]{display:none}
+.thumb{position:relative;width:72px;height:72px;border-radius:12px;overflow:hidden;border:1px solid var(--line)}
+.thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.thumb button{position:absolute;top:2px;right:2px;width:20px;height:20px;border-radius:50%;border:none;background:rgba(0,0,0,.6);color:#fff;font-size:12px;cursor:pointer;line-height:1}
+.composer{display:flex;align-items:center;gap:8px;padding:10px 12px;border-top:1px solid var(--line);background:var(--surface)}
+.icon-btn{width:40px;height:40px;border-radius:50%;border:1px solid var(--line);background:var(--surface2);color:var(--text);font-size:20px;line-height:1;display:flex;align-items:center;justify-content:center;cursor:pointer;flex:0 0 auto}
+#input{flex:1;border:1px solid var(--line);background:var(--surface2);color:var(--text);border-radius:999px;padding:10px 14px;font-size:15px;font-family:inherit;resize:none;max-height:120px;line-height:1.35}
+#input:focus{outline:2px solid var(--blue);outline-offset:0}
+.send-btn{width:40px;height:40px;border-radius:50%;border:none;background:var(--blue);color:#fff;font-size:18px;cursor:pointer;flex:0 0 auto;display:flex;align-items:center;justify-content:center}
+.send-btn:disabled{opacity:.5;cursor:default}
+.hint{font-size:11.5px;color:var(--muted);text-align:center;padding:8px 16px 12px}
+.composer{position:relative}
+.attach-menu{position:absolute;left:12px;bottom:62px;background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:6px;display:flex;flex-direction:column;gap:4px;z-index:5}
+.attach-menu[hidden]{display:none}
+.attach-menu button{text-align:left;padding:9px 12px;border:none;background:transparent;color:var(--text);font:inherit;font-size:14px;cursor:pointer;border-radius:8px}
+.attach-menu button:hover{background:var(--surface2)}
+.speak-row{margin-top:6px}
+.speak-btn{font:inherit;font-size:12px;line-height:1;padding:5px 10px;border-radius:999px;border:1px solid var(--line);background:transparent;color:var(--muted);cursor:pointer}
+.speak-btn.playing{background:var(--surface2);color:var(--text)}
+.staging-note{border:1px dashed #d97706;border-radius:10px;padding:8px 10px;margin:8px 12px 0;text-align:center;font-size:12px;color:var(--muted)}
+.staging-note button{font:inherit;font-size:12px;padding:5px 10px;border-radius:999px;border:1px solid var(--line);background:var(--surface2);color:var(--text);cursor:pointer}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="phone-shell" role="main" aria-label="Chat with Tiny Tim">
+    <div class="chat-header">
+      <div class="agent">
+        <div class="avatar-wrap"><div class="avatar-emoji" role="img" aria-label="Tiny Tim">&#x1F98A;</div></div>
+        <div class="agent-name">Tiny Tim</div>
+        <div class="status-row">
+          <span class="status-pill" id="statusPill"><span class="status-dot"></span><span id="statusText">Ready</span></span>
+          <span class="status-pill" title="meta-llama/Llama-4-Scout-17B-16E-Instruct">Llama 4 Scout &middot; cloud</span>
+        </div>
+      </div>
+    </div>
+    <div class="time-label" id="timeLabel"></div>
+    <div class="messages" id="messages" aria-live="polite"></div>
+    <div class="thumb-strip" id="thumbStrip" hidden></div>
+    <div class="composer">
+      <button class="icon-btn" id="attachBtn" title="Attach a picture" aria-label="Attach a picture">&#xFF0B;</button>
+      <input type="file" id="fileInput" accept="image/*" hidden>
+      <input type="file" id="cameraInput" accept="image/*" capture="environment" hidden>
+      <input type="file" id="chooseFileInput" accept="image/*" hidden>
+      <div class="attach-menu" id="attachMenu" hidden>
+        <button type="button" id="libraryBtn">Photo Library</button>
+        <button type="button" id="cameraBtn">Camera</button>
+        <button type="button" id="chooseFileBtn">Choose File</button>
+      </div>
+      <textarea id="input" rows="1" placeholder="Message Tiny Tim&hellip;" aria-label="Message"></textarea>
+      <button class="send-btn" id="sendBtn" title="Send" aria-label="Send">&uarr;</button>
+    </div>
+    <audio id="voiceAudio" playsinline preload="auto" style="position:absolute;width:1px;height:1px;opacity:0;pointer-events:none" aria-hidden="true"></audio>
+    <div class="staging-note" id="stagingNote"><strong>STAGING ONLY — remove before live:</strong> <button type="button" id="testToneBtn">Test tone</button> <button type="button" id="testShortVoiceBtn">Test short voice</button> <span id="testToneStatus">Tap Test tone first: if you hear a beep, the iPhone audio path works. If no beep, the phone/browser is blocking audio.</span> <span id="shortVoiceStatus">Test short voice: generates only the word Hi with sanoTTS hfc, slower again (lengthScale 1.28, about 10% slower than the 1.15 version). If generation takes more than 30 seconds it will visibly report generate timed out instead of hanging on Stop forever.</span></div>
+    <div class="staging-note" id="voiceDiag"><strong>STAGING ONLY — voice diagnostics:</strong> <span id="voiceDiagStatus">No voice played yet. After tapping Listen, this line shows, for each chunk: text length, blob bytes, decoded duration, sample rate, channels, peak amplitude, and AudioContext state.</span></div>
+    <div class="hint">Powered by Llama 4 Scout through a secure proxy &mdash; no downloads, no key needed.</div>
+  </div>
+</div>
+<script>
+"use strict";
+/* Tiny Tim — Llama-only chat.
+   One model only: Llama 4 Scout, served through the owner's Cloudflare
+   Worker proxy. No API key lives in this page, visitors never enter a key,
+   and no on-device models are offered or loaded. */
+const WORKER_URL = "https://echo-chat-llama-proxy.evan996.workers.dev/v1/chat/completions";
+const MODEL = "meta-llama/Llama-4-Scout-17B-16E-Instruct";
+const SYSTEM_PROMPT = "You are Tiny Tim, a helpful assistant inside a small chat app, powered by Meta's Llama model. Answer clearly and concisely. When the user sends a picture, look at it and describe or answer about what is actually in it. Use Markdown sparingly (short paragraphs, occasional lists or code blocks).";
+const HISTORY_LIMIT = 20;
+
+const messagesEl = document.getElementById("messages");
+const inputEl = document.getElementById("input");
+const sendBtn = document.getElementById("sendBtn");
+const attachBtn = document.getElementById("attachBtn");
+const fileInput = document.getElementById("fileInput");
+const cameraInput = document.getElementById("cameraInput");
+const chooseFileInput = document.getElementById("chooseFileInput");
+const attachMenu = document.getElementById("attachMenu");
+const libraryBtn = document.getElementById("libraryBtn");
+const cameraBtn = document.getElementById("cameraBtn");
+const chooseFileBtn = document.getElementById("chooseFileBtn");
+const thumbStrip = document.getElementById("thumbStrip");
+const statusPill = document.getElementById("statusPill");
+const statusText = document.getElementById("statusText");
+
+let pendingImage = null; // JPEG data URL, or null
+const history = [];      // {role, content} in OpenAI chat format
+
+function setStatus(mode, text) {
+  statusPill.classList.toggle("working", mode === "working");
+  statusText.textContent = text;
+}
+function scrollDown() { messagesEl.scrollTop = messagesEl.scrollHeight; }
+function esc(s) {
+  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+/* Tiny Markdown: fenced code blocks, inline code, bold, italic, lists, paragraphs. */
+function md(src) {
+  const blocks = [];
+  let text = esc(src).replace(/```[a-zA-Z0-9_-]*\n?([\s\S]*?)```/g, function (m, code) {
+    blocks.push("<pre><code>" + code.replace(/^\n+|\s+$/g, "") + "</code></pre>");
+    return "\u0000" + (blocks.length - 1) + "\u0000";
+  });
+  // Restore ONLY safe subscript/superscript tags (everything else stays escaped).
+  text = text.replace(/&lt;(\/?)(sub|sup)&gt;/g, "<$1$2>");
+  text = text.replace(/`([^`\n]+)`/g, "<code>$1</code>");
+  text = text.replace(/\*\*([^*\n]+)\*\*/g, "<strong>$1</strong>");
+  text = text.replace(/(^|[\s(>])\*([^*\n]+)\*/g, "$1<em>$2</em>");
+  const lines = text.split("\n");
+  let html = "", list = null;
+  const close = function () { if (list) { html += list === "ul" ? "</ul>" : "</ol>"; list = null; } };
+  for (const line of lines) {
+    const t = line.trim();
+    const ph = t.match(/^\u0000(\d+)\u0000$/);
+    if (ph) { close(); html += blocks[+ph[1]]; continue; }
+    const ul = t.match(/^[-*]\s+(.*)$/);
+    const ol = t.match(/^\d+[.)]\s+(.*)$/);
+    if (ul) { if (list !== "ul") { close(); html += "<ul>"; list = "ul"; } html += "<li>" + ul[1] + "</li>"; }
+    else if (ol) { if (list !== "ol") { close(); html += "<ol>"; list = "ol"; } html += "<li>" + ol[1] + "</li>"; }
+    else if (/^#{1,6}\s+/.test(t)) { const lvl = t.match(/^#+/)[0].length; close(); html += "<h" + lvl + ">" + t.replace(/^#+\s+/, "") + "</h" + lvl + ">"; }
+    else if (t === "") { close(); }
+    else { close(); html += "<p>" + t + "</p>"; }
+  }
+  close();
+  return html || "<p></p>";
+}
+function addBubble(role, html, cls) {
+  const div = document.createElement("div");
+  div.className = "msg " + (cls || role);
+  div.innerHTML = html;
+  messagesEl.appendChild(div);
+  scrollDown();
+  return div;
+}
+
+
+let speechRun = 0, silentWavUrl = "", currentAudioUrl = "", activeSpeakBtn = null;
+let audioCtx = null, currentSource = null, currentTone = null;
+function getVoiceAudio() {
+  const a = document.getElementById("voiceAudio");
+  if (a) { try { a.volume = 1; a.muted = false; a.defaultMuted = false; a.playsInline = true; a.preload = "auto"; } catch (e) {} }
+  return a;
+}
+function getAudioCtx() {
+  try {
+    if (!audioCtx) { const AC = window.AudioContext || window.webkitAudioContext; if (AC) audioCtx = new AC(); }
+    if (audioCtx && audioCtx.state === "suspended") { const pr = audioCtx.resume(); if (pr && pr.catch) pr.catch(function () {}); }
+  } catch (e) {}
+  return audioCtx;
+}
+function setVoiceDiag(text) {
+  try { const el = document.getElementById("voiceDiagStatus"); if (el) el.textContent = text; } catch (e) {}
+}
+function withTimeout(p, ms, label) {
+  return Promise.race([p, new Promise(function (_, rej) {
+    setTimeout(function () { rej(new Error((label || "Load") + " timed out")); }, ms);
+  })]);
+}
+function makeSilentWavUrl() {
+  const sr = 8000, n = 800, bytes = 44 + n * 2, buf = new ArrayBuffer(bytes), v = new DataView(buf);
+  function ws(off, str) { for (let i = 0; i < str.length; i++) v.setUint8(off + i, str.charCodeAt(i)); }
+  ws(0, "RIFF"); v.setUint32(4, bytes - 8, true); ws(8, "WAVE"); ws(12, "fmt "); v.setUint32(16, 16, true);
+  v.setUint16(20, 1, true); v.setUint16(22, 1, true); v.setUint32(24, sr, true); v.setUint32(28, sr * 2, true);
+  v.setUint16(32, 2, true); v.setUint16(34, 16, true); ws(36, "data"); v.setUint32(40, n * 2, true);
+  return URL.createObjectURL(new Blob([buf], { type: "audio/wav" }));
+}
+function unlockAudio() {
+  try {
+    const a = getVoiceAudio(); if (!a) return;
+    if (!silentWavUrl) silentWavUrl = makeSilentWavUrl();
+    a.src = silentWavUrl;
+    const pr = a.play();
+    if (pr && pr.then) pr.then(function () { try { a.pause(); a.currentTime = 0; } catch (e) {} }).catch(function () {});
+  } catch (e) {}
+  getAudioCtx();
+}
+function stopSpeaking() {
+  speechRun++;
+  try { if (currentSource) { try { currentSource.stop(); } catch (e) {} try { currentSource.disconnect(); } catch (e) {} currentSource = null; } } catch (e) {}
+  try { if (currentTone) { try { currentTone.stop(); } catch (e) {} currentTone = null; } } catch (e) {}
+  const a = getVoiceAudio(); if (a) { try { a.pause(); } catch (e) {} }
+  if (currentAudioUrl) { try { URL.revokeObjectURL(currentAudioUrl); } catch (e) {} currentAudioUrl = ""; }
+  if (activeSpeakBtn) { activeSpeakBtn.textContent = "Listen"; activeSpeakBtn.classList.remove("playing"); activeSpeakBtn = null; }
+}
+function playTone() {
+  const status = document.getElementById("testToneStatus");
+  try {
+    const ctx = getAudioCtx(); if (!ctx) throw new Error("Web Audio is not available in this browser");
+    if (currentTone) { try { currentTone.stop(); } catch (e) {} currentTone = null; }
+    const osc = ctx.createOscillator(); const gain = ctx.createGain();
+    osc.type = "sine"; osc.frequency.value = 880; gain.gain.value = 0.25;
+    osc.connect(gain); gain.connect(ctx.destination); osc.start(); currentTone = osc;
+    osc.onended = function () { currentTone = null; };
+    setTimeout(function () { try { osc.stop(); } catch (e) {} }, 800);
+    if (status) status.textContent = "Tone played \u2014 did you hear a beep? If yes, the audio path works; try Listen next. If no beep, the phone/browser is blocking audio.";
+  } catch (err) {
+    if (status) status.textContent = "Test tone failed: " + (err && err.message ? err.message : String(err));
+  }
+}
+function fmtTime(d) {
+  try {
+    const h = String(d.getHours()).padStart(2, "0"), m = String(d.getMinutes()).padStart(2, "0"), s = String(d.getSeconds()).padStart(2, "0");
+    return h + ":" + m + ":" + s;
+  } catch (e) { return ""; }
+}
+function setShortVoiceStatus(text) {
+  try { const el = document.getElementById("shortVoiceStatus"); if (el) el.textContent = text; } catch (e) {}
+}
+function wavBlobFromSamples(samples, sampleRate) {
+  const sr = sampleRate || 22050;
+  const n = samples.length, bytes = 44 + n * 2, buf = new ArrayBuffer(bytes), v = new DataView(buf);
+  function ws(off, str) { for (let i = 0; i < str.length; i++) v.setUint8(off + i, str.charCodeAt(i)); }
+  ws(0, "RIFF"); v.setUint32(4, bytes - 8, true); ws(8, "WAVE"); ws(12, "fmt "); v.setUint32(16, 16, true);
+  v.setUint16(20, 1, true); v.setUint16(22, 1, true); v.setUint32(24, sr, true); v.setUint32(28, sr * 2, true);
+  v.setUint16(32, 2, true); v.setUint16(34, 16, true); ws(36, "data"); v.setUint32(40, n * 2, true);
+  for (let i = 0; i < n; i++) { let s = Math.max(-1, Math.min(1, samples[i])); v.setInt16(44 + i * 2, s < 0 ? s * 0x8000 : s * 0x7FFF, true); }
+  return new Blob([buf], { type: "audio/wav" });
+}
+function playAudioBlobWebAudio(blob, run, chunkText, chunkIndex, chunkTotal) {
+  // Primary path: decode the voice blob in an AudioContext resumed
+  // immediately before each chunk play (not only at tap time), then
+  // play the decoded buffer. Diagnostics for every chunk are written
+  // to the visible staging diagnostic line, including peak amplitude:
+  // a decoded buffer with peak 0.000 is silent data, not a playback
+  // failure, and must be reported as such.
+  const label = "Chunk " + chunkIndex + "/" + chunkTotal + " · text " + (chunkText ? chunkText.length : 0) + " chars";
+  return Promise.resolve().then(function () {
+    if (!blob || blob.size < 500) {
+      setVoiceDiag(label + " · blob " + (blob ? blob.size : 0) + " bytes · NO usable audio: blob missing or under 500 bytes.");
+      throw new Error("the voice model returned no usable audio (blob size " + (blob ? blob.size : 0) + " bytes)");
+    }
+    const ctx = getAudioCtx(); if (!ctx) throw new Error("Web Audio is not available in this browser");
+    const stateAtDecode = ctx.state;
+    const wasSuspendedAtDecode = stateAtDecode === "suspended";
+    setVoiceDiag(label + " · blob " + blob.size + " bytes · context at decode: " + stateAtDecode + " (suspended: " + (wasSuspendedAtDecode ? "yes" : "no") + ") · decoding…");
+    return blob.arrayBuffer().then(function (ab) { return ctx.decodeAudioData(ab.slice(0)); }).then(function (buf) {
+      if (run !== speechRun) return;
+      if (!buf || !buf.duration || buf.duration < 0.05) {
+        setVoiceDiag(label + " · blob " + blob.size + " bytes · decoded " + (buf ? buf.duration.toFixed(2) : "0.00") + "s · EMPTY buffer (under 0.05s).");
+        throw new Error("the voice model returned an empty audio buffer");
+      }
+      let peak = 0;
+      try {
+        for (let ch = 0; ch < buf.numberOfChannels; ch++) {
+          const data = buf.getChannelData(ch);
+          for (let i = 0; i < data.length; i++) { const v = Math.abs(data[i]); if (v > peak) peak = v; }
+        }
+      } catch (e) {}
+      // Resume immediately before THIS chunk plays, and log whether
+      // the context was suspended at that moment.
+      const suspendedBeforePlay = ctx.state === "suspended";
+      const resumePromise = suspendedBeforePlay ? ctx.resume() : Promise.resolve();
+      return Promise.resolve(resumePromise).catch(function () {}).then(function () {
+        const stateAtPlay = ctx.state;
+        setVoiceDiag(label + " · blob " + blob.size + " bytes · decoded " + buf.duration.toFixed(2) + "s · " + buf.sampleRate + " Hz · " + buf.numberOfChannels + " ch · peak " + peak.toFixed(3) + " · context at decode: " + stateAtDecode + " · suspended before chunk play: " + (suspendedBeforePlay ? "yes" : "no") + " · context at play: " + stateAtPlay + (peak === 0 ? " · WARNING: decoded buffer is all silence (peak 0.000)." : ""));
+        if (run !== speechRun) return;
+        return new Promise(function (resolve, reject) {
+          const src = ctx.createBufferSource(); const gain = ctx.createGain();
+          gain.gain.value = 1.0; src.buffer = buf; src.connect(gain); gain.connect(ctx.destination);
+          currentSource = src;
+          src.onended = function () { if (currentSource === src) currentSource = null; resolve(); };
+          try { src.start(); } catch (err) { reject(err); }
+        });
+      });
+    });
+  });
+}
+function playAudioBlobDom(blob) {
+  // Fallback path only, used if Web Audio decoding fails: the real
+  // in-DOM <audio> element, volume/muted forced on every play.
+  return new Promise(function (resolve, reject) {
+    const url = URL.createObjectURL(blob);
+    const a = getVoiceAudio(); if (!a) { reject(new Error("no audio element")); return; }
+    currentAudioUrl = url; let settled = false;
+    function finish(ok) {
+      if (settled) return; settled = true;
+      a.removeEventListener("ended", onEnd); a.removeEventListener("error", onErr);
+      if (currentAudioUrl === url) currentAudioUrl = "";
+      try { URL.revokeObjectURL(url); } catch (e) {}
+      if (ok) resolve(); else reject(new Error("playback failed"));
+    }
+    function onEnd() { finish(true); }
+    function onErr() { finish(false); }
+    a.addEventListener("ended", onEnd); a.addEventListener("error", onErr);
+    a.src = url;
+    try { a.volume = 1; a.muted = false; } catch (e) {}
+    const pr = a.play();
+    if (pr && pr.catch) pr.catch(function (err) { finish(false); });
+  });
+}
+function playAudioBlob(blob, run, chunkText, chunkIndex, chunkTotal) {
+  return playAudioBlobWebAudio(blob, run, chunkText, chunkIndex, chunkTotal).catch(function (err) {
+    // Only fall back to DOM audio if the run is still active; a decode
+    // failure on a stopped run must not restart playback. The fallback
+    // is LABELLED in the visible diagnostic line with the exact decode
+    // error, never silent.
+    if (run !== speechRun) throw err;
+    setVoiceDiag("Chunk " + chunkIndex + "/" + chunkTotal + " · text " + (chunkText ? chunkText.length : 0) + " chars · blob " + (blob ? blob.size : 0) + " bytes · Web Audio decode failed, DOM fallback used: " + (err && err.message ? err.message : String(err)));
+    return playAudioBlobDom(blob);
+  });
+}
+
+/* ---- STAGING ONLY: voice playback, sanoTTS ENGINE ----
+   sanoTTS (Ampixa, GPL-3.0): a tiny neural TTS family, 294k-2.3M params,
+   custom Emscripten WASM (NOT ONNX Runtime, NOT threaded ORT) + bundled
+   espeak-ng phonemizer. This is why it may avoid the failure that killed
+   Piper and Kitten: neither engine ever loads ort-wasm-simd-threaded.jsep.mjs,
+   and GitHub Pages cannot set COOP/COEP, which threaded WASM needs for
+   SharedArrayBuffer. WASM runtime ~2.7 MB uncompressed (~700 KB gzipped
+   over the wire per the project README).
+   Voice: hfc, English, gender undocumented — ear-judgement test only, do NOT label male
+   (SCOREQ 4.13 / UTMOS 4.10 in the project README), ~3 MB fp16 / 5.6 MB fp32.
+   This variant: hfc, slower again — lengthScale 1.28 overrides the voice's
+   default speaking rate (longer phoneme durations), per the sanotts-web API.
+   HONEST FLAG: sanoTTS publishes NO documented male English voice.
+   kristin is female-named, hfc/heart/heart-nano gender is undocumented
+   in the README/demo. This build therefore does NOT meet Evan's
+   "male voice, because it's Tiny Tim" requirement as documented; it is a
+   technical proof that a non-ONNX engine can speak at all. Do NOT relabel
+   hfc as male. Parent/Evan must decide whether to accept hfc
+   unlabelled, or reject sanoTTS on voice grounds.
+   API (sanotts-web npm README): SanoTTS.load() (assetBase defaults to the
+   hosted demo https://ampixa.github.io/sanoTTS/), tts.synthesize(text,
+   {voice, lengthScale}) -> {samples: Float32Array, sampleRate, phonemeCount, elapsedMs},
+   tts.loadVoice(key) to pre-download. Samples are converted here to a WAV
+   Blob and played through the existing WebAudio/DOM playback + diagnostics,
+   so a failure is visible, not silent. No speechSynthesis substitution.
+   First tap downloads the WASM runtime + hfc voice once, then caches. */
+const SANO_VOICE = "hfc";
+const SANO_LENGTH_SCALE = 1.28;
+const SANO_SOURCES = ["https://cdn.jsdelivr.net/npm/sanotts-web@latest/+esm", "https://esm.sh/sanotts-web@latest"];
+let sanoPromise = null, sanoTts = null;
+function loadVoiceEngine() {
+  if (sanoTts) return Promise.resolve(sanoTts);
+  if (!sanoPromise) {
+    const failures = [];
+    function trySource(i) {
+      if (i >= SANO_SOURCES.length) return Promise.reject(new Error("the sanoTTS voice library failed to load \u2014 " + failures.join(" \u00b7 ")));
+      const url = SANO_SOURCES[i];
+      return withTimeout(Promise.resolve().then(function () { return import(url); }), 60000, "sanoTTS library import (" + url + ")")
+        .then(function (mod) {
+          const SanoTTS = mod && (mod.SanoTTS || (mod.default && mod.default.SanoTTS));
+          if (!SanoTTS || typeof SanoTTS.load !== "function") throw new Error("the module loaded but exposed no SanoTTS.load function");
+          return withTimeout(Promise.resolve().then(function () { return SanoTTS.load(); }), 300000, "sanoTTS runtime load").then(function (tts) {
+            if (!tts || typeof tts.synthesize !== "function") throw new Error("sanoTTS loaded but exposed no synthesize function");
+            if (typeof tts.loadVoice === "function") {
+              return withTimeout(Promise.resolve().then(function () { return tts.loadVoice(SANO_VOICE); }), 300000, "sanoTTS voice download").then(function () { return tts; });
+            }
+            return tts;
+          });
+        })
+        .catch(function (err) { failures.push(url + " \u2192 " + (err && err.message ? err.message : err)); return trySource(i + 1); });
+    }
+    sanoPromise = trySource(0).then(function (tts) { sanoTts = tts; return tts; });
+    sanoPromise.catch(function () { if (sanoPromise) sanoPromise = null; });
+  }
+  return sanoPromise;
+}
+function generateWithTimeout(tts, text, ms) {
+  return withTimeout(Promise.resolve().then(function () { return tts.synthesize(text, { voice: SANO_VOICE, lengthScale: SANO_LENGTH_SCALE }); }), ms, "sanoTTS generate").then(function (out) {
+    if (!out || !out.samples || !out.samples.length) throw new Error("the voice model returned no audio");
+    return wavBlobFromSamples(out.samples, out.sampleRate);
+  });
+}
+function testShortVoice() {
+  unlockAudio(); getAudioCtx();
+  stopSpeaking();
+  const started = new Date();
+  setShortVoiceStatus("Test short voice: generating \"Hi\" with sanoTTS hfc\u2026 started " + fmtTime(started) + ". If this passes 30 seconds it will report generate timed out.");
+  setVoiceDiag("Test short voice: generating \"Hi\"\u2026 started " + fmtTime(started) + ".");
+  const run = speechRun;
+  loadVoiceEngine().then(function (tts) {
+    if (run !== speechRun) return;
+    const genStarted = new Date();
+    setShortVoiceStatus("Test short voice: sanoTTS loaded, generating \"Hi\"\u2026 generating started " + fmtTime(genStarted) + ".");
+    return generateWithTimeout(tts, "Hi", 30000).then(function (blob) {
+      if (run !== speechRun) return;
+      const genFinished = new Date();
+      const secs = ((genFinished - genStarted) / 1000).toFixed(1);
+      setShortVoiceStatus("Test short voice: generate finished " + fmtTime(genFinished) + " (" + secs + "s after generating started) \u00b7 blob " + blob.size + " bytes \u00b7 playing\u2026");
+      return playAudioBlob(blob, run, "Hi", 1, 1).then(function () {
+        setShortVoiceStatus("Test short voice: DONE \u2014 generating started " + fmtTime(genStarted) + ", generate finished " + fmtTime(genFinished) + " (" + secs + "s) \u00b7 blob " + blob.size + " bytes \u00b7 played to the end. Did you hear \"Hi\"?");
+      });
+    });
+  }).catch(function (err) {
+    if (run !== speechRun) return;
+    const msg = err && err.message ? err.message : String(err);
+    const timedOut = /timed out/i.test(msg);
+    setShortVoiceStatus("Test short voice: " + (timedOut ? "generate timed out after 30 seconds \u2014 sanoTTS did not finish generating \"Hi\" in time." : "FAILED: " + msg));
+    setVoiceDiag("Test short voice: " + (timedOut ? "generate timed out after 30 seconds." : "FAILED: " + msg));
+  });
+}
+
+function cleanForSpeech(text) {
+  return String(text || "")
+    .replace(/```[\s\S]*?```/g, " code block omitted. ")
+    .replace(/`([^`]+)`/g, "$1")
+    .replace(/\*\*([^*]+)\*\*/g, "$1")
+    .replace(/<sub>([^<]*)<\/sub>/g, " sub $1")
+    .replace(/<sup>([^<]*)<\/sup>/g, " super $1")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1")
+    .replace(/[*_#>]/g, " ")
+    .replace(/\s+/g, " ").trim();
+}
+function splitForSpeech(text) {
+  const parts = []; let cur = "";
+  const sentences = String(text).match(/[^.!?]+[.!?]*\s*/g) || [String(text)];
+  sentences.forEach(function (sent) {
+    if (cur && (cur + " " + sent).trim().length > 240) { parts.push(cur.trim()); cur = sent; }
+    else cur = cur ? cur + " " + sent : sent;
+  });
+  if (cur.trim()) parts.push(cur.trim());
+  return parts.length ? parts : [String(text)];
+}
+function addSpeakButton(bubble, rawText) {
+  const clean = cleanForSpeech(rawText);
+  if (!clean) return;
+  const row = document.createElement("div"); row.className = "speak-row";
+  const btn = document.createElement("button"); btn.type = "button"; btn.className = "speak-btn";
+  btn.textContent = "Listen"; btn.setAttribute("aria-label", "Read this reply aloud");
+  btn.addEventListener("click", function () {
+    unlockAudio(); getAudioCtx(); // must run synchronously inside this tap
+    if (activeSpeakBtn === btn) { stopSpeaking(); return; }
+    stopSpeaking(); activeSpeakBtn = btn; btn.classList.add("playing"); btn.textContent = "Loading voice…";
+    const run = speechRun;
+    loadVoiceEngine().then(function (engine) {
+      if (run !== speechRun) return;
+      btn.textContent = "Stop";
+      const chunks = splitForSpeech(clean); let chain = Promise.resolve();
+      chunks.forEach(function (chunk, chunkIndex) {
+        chain = chain.then(function () {
+          if (run !== speechRun) return;
+          setVoiceDiag("Generating chunk " + (chunkIndex + 1) + "/" + chunks.length + "… started " + fmtTime(new Date()) + ". If this passes 30 seconds it will report generate timed out instead of hanging on Stop.");
+          return generateWithTimeout(engine, chunk, 30000).then(function (blob) {
+            if (run !== speechRun) return;
+            if (!blob) throw new Error("the voice model returned no audio");
+            return playAudioBlob(blob, run, chunk, chunkIndex + 1, chunks.length);
+          });
+        });
+      });
+      return chain.then(function () { if (run === speechRun) stopSpeaking(); });
+    }).catch(function (err) {
+      if (run !== speechRun) return;
+      stopSpeaking();
+      btn.textContent = "Voice failed — tap to retry"; btn.title = err && err.message ? err.message : String(err);
+      if (/timed out/i.test(err && err.message ? err.message : String(err))) setVoiceDiag("Listen: generate timed out after 30 seconds, so playback stopped instead of hanging on Stop.");
+    });
+  });
+  row.appendChild(btn); bubble.appendChild(row);
+}
+function addPictureBubble(dataUrl, caption) {
+  const div = document.createElement("div");
+  div.className = "pic-bubble";
+  const img = document.createElement("img");
+  img.src = dataUrl;
+  img.alt = "Attached picture";
+  div.appendChild(img);
+  if (caption) {
+    const cap = document.createElement("div");
+    cap.className = "cap";
+    cap.textContent = caption;
+    div.appendChild(cap);
+  }
+  messagesEl.appendChild(div);
+  scrollDown();
+}
+function friendlyError(status) {
+  if (status === 429) return "Too many requests right now \u2014 please slow down and try again in a bit.";
+  if (status === 503) return "The chat service is temporarily unavailable (it may have hit its daily budget). Try again later.";
+  if (status === 400) return "That request was rejected. Try a shorter message or a smaller picture.";
+  return "Something went wrong reaching Tiny Tim. Please try again.";
+}
+async function send() {
+  stopSpeaking();
+  const text = inputEl.value.trim();
+  if ((!text && !pendingImage) || sendBtn.disabled) return;
+  const image = pendingImage;
+  pendingImage = null;
+  renderThumbs();
+  inputEl.value = "";
+  autoresize();
+  let content;
+  if (image) {
+    const parts = [];
+    if (text) parts.push({ type: "text", text: text });
+    parts.push({ type: "image_url", image_url: { url: image } });
+    content = parts;
+  } else {
+    content = text;
+  }
+  history.push({ role: "user", content: content });
+  if (image) addPictureBubble(image, text);
+  else addBubble("out", "<p>" + esc(text).replace(/\n/g, "<br>") + "</p>");
+  setStatus("working", "Thinking\u2026");
+  sendBtn.disabled = true;
+  try {
+    const payload = {
+      model: MODEL,
+      messages: [{ role: "system", content: SYSTEM_PROMPT }].concat(history.slice(-HISTORY_LIMIT)),
+      temperature: 0.7,
+      max_tokens: 1024
+    };
+    const res = await fetch(WORKER_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) throw new Error("http" + res.status);
+    const data = await res.json();
+    const msg = data && data.choices && data.choices[0] && data.choices[0].message;
+    const reply = msg && msg.content;
+    if (typeof reply !== "string" || !reply.trim()) throw new Error("empty");
+    history.push({ role: "assistant", content: reply });
+    addSpeakButton(addBubble("in", md(reply)), reply);
+  } catch (err) {
+    const m = /^http(\d+)$/.exec(String(err && err.message));
+    addBubble("in", "<p>" + esc(friendlyError(m ? +m[1] : 0)) + "</p>", "error");
+  } finally {
+    setStatus("idle", "Ready");
+    sendBtn.disabled = false;
+    inputEl.focus();
+  }
+}
+function closeAttachMenu() { attachMenu.hidden = true; }
+attachBtn.addEventListener("click", function (e) { e.stopPropagation(); attachMenu.hidden = !attachMenu.hidden; });
+document.addEventListener("click", function (e) { if (!attachMenu.hidden && !attachMenu.contains(e.target) && e.target !== attachBtn) closeAttachMenu(); });
+libraryBtn.addEventListener("click", function () { closeAttachMenu(); fileInput.click(); });
+cameraBtn.addEventListener("click", function () { closeAttachMenu(); cameraInput.click(); });
+chooseFileBtn.addEventListener("click", function () { closeAttachMenu(); chooseFileInput.click(); });
+function handlePickedFile(pickedInput) {
+  const f = pickedInput.files && pickedInput.files[0];
+  pickedInput.value = "";
+  if (!f) return;
+  const reader = new FileReader();
+  reader.onload = function () {
+    const img = new Image();
+    img.onload = function () {
+      const maxDim = 1024;
+      let w = img.naturalWidth, h = img.naturalHeight;
+      const scale = Math.min(1, maxDim / Math.max(w, h));
+      w = Math.max(1, Math.round(w * scale));
+      h = Math.max(1, Math.round(h * scale));
+      const c = document.createElement("canvas");
+      c.width = w; c.height = h;
+      c.getContext("2d").drawImage(img, 0, 0, w, h);
+      let q = 0.85, url = c.toDataURL("image/jpeg", q);
+      while (url.length > 2000000 && q > 0.4) { q -= 0.15; url = c.toDataURL("image/jpeg", q); }
+      pendingImage = url;
+      renderThumbs();
+    };
+    img.src = reader.result;
+  };
+  reader.readAsDataURL(f);
+}
+fileInput.addEventListener("change", function () { handlePickedFile(fileInput); });
+cameraInput.addEventListener("change", function () { handlePickedFile(cameraInput); });
+chooseFileInput.addEventListener("change", function () { handlePickedFile(chooseFileInput); });
+function renderThumbs() {
+  thumbStrip.innerHTML = "";
+  thumbStrip.hidden = !pendingImage;
+  if (!pendingImage) return;
+  const d = document.createElement("div");
+  d.className = "thumb";
+  const img = document.createElement("img");
+  img.src = pendingImage;
+  img.alt = "Picture to send";
+  const x = document.createElement("button");
+  x.textContent = "\u00D7";
+  x.setAttribute("aria-label", "Remove picture");
+  x.addEventListener("click", function () { pendingImage = null; renderThumbs(); });
+  d.appendChild(img);
+  d.appendChild(x);
+  thumbStrip.appendChild(d);
+}
+function autoresize() {
+  inputEl.style.height = "auto";
+  inputEl.style.height = Math.min(inputEl.scrollHeight, 120) + "px";
+}
+inputEl.addEventListener("input", autoresize);
+inputEl.addEventListener("keydown", function (e) {
+  if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); }
+});
+sendBtn.addEventListener("click", send);
+(function init() {
+  const d = new Date();
+  let h = d.getHours();
+  const ap = h >= 12 ? "PM" : "AM";
+  h = h % 12 || 12;
+  const min = String(d.getMinutes()).padStart(2, "0");
+  document.getElementById("timeLabel").textContent = "Today \u00B7 " + h + ":" + min + " " + ap;
+  addSpeakButton(addBubble("in", md("Hi, I'm **Tiny Tim**! Ask me anything \u2014 I now run on **Llama 4 Scout** in the cloud, so there's nothing to download and no key to enter. You can also attach a picture for me to look at.")), "Hi, I'm Tiny Tim! Ask me anything — I now run on Llama 4 Scout in the cloud, so there's nothing to download and no key to enter. You can also attach a picture for me to look at.");
+  const toneBtn = document.getElementById("testToneBtn"); if (toneBtn) toneBtn.addEventListener("click", playTone);
+  const shortBtn = document.getElementById("testShortVoiceBtn"); if (shortBtn) shortBtn.addEventListener("click", testShortVoice);
+  autoresize();
+})();
+</script>
+</body>
+</html>
