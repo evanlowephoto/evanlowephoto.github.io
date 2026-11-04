@@ -105,7 +105,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Ar
       <button class="send-btn" id="sendBtn" title="Send" aria-label="Send">&uarr;</button>
     </div>
     <audio id="voiceAudio" playsinline preload="auto" style="position:absolute;width:1px;height:1px;opacity:0;pointer-events:none" aria-hidden="true"></audio>
-    <div class="staging-note" id="stagingNote"><strong>STAGING ONLY — remove before live:</strong> <button type="button" id="testToneBtn">Test tone</button> <button type="button" id="testShortVoiceBtn">Test short voice</button> <span id="testToneStatus">Tap Test tone first: if you hear a beep, the iPhone audio path works. If no beep, the phone/browser is blocking audio.</span> <span id="shortVoiceStatus">Test short voice: generates only the word Hi with sanoTTS hfc. If generation takes more than 30 seconds it will visibly report generate timed out instead of hanging on Stop forever.</span></div>
+    <div class="staging-note" id="stagingNote"><strong>STAGING ONLY — remove before live:</strong> <button type="button" id="testToneBtn">Test tone</button> <button type="button" id="testShortVoiceBtn">Test short voice</button> <span id="testToneStatus">Tap Test tone first: if you hear a beep, the iPhone audio path works. If no beep, the phone/browser is blocking audio.</span> <span id="shortVoiceStatus">Test short voice: generates only the word Hi with sanoTTS hfc, slightly slower (lengthScale 1.15). If generation takes more than 30 seconds it will visibly report generate timed out instead of hanging on Stop forever.</span></div>
     <div class="staging-note" id="voiceDiag"><strong>STAGING ONLY — voice diagnostics:</strong> <span id="voiceDiagStatus">No voice played yet. After tapping Listen, this line shows, for each chunk: text length, blob bytes, decoded duration, sample rate, channels, peak amplitude, and AudioContext state.</span></div>
     <div class="hint">Powered by Llama 4 Scout through a secure proxy &mdash; no downloads, no key needed.</div>
   </div>
@@ -363,21 +363,24 @@ function playAudioBlob(blob, run, chunkText, chunkIndex, chunkTotal) {
    over the wire per the project README).
    Voice: hfc, English, gender undocumented — ear-judgement test only, do NOT label male
    (SCOREQ 4.13 / UTMOS 4.10 in the project README), ~3 MB fp16 / 5.6 MB fp32.
+   This variant: hfc, slightly slower — lengthScale 1.15 overrides the voice's
+   default speaking rate (longer phoneme durations), per the sanotts-web API.
    HONEST FLAG: sanoTTS publishes NO documented male English voice.
-   amy/kristin are female-named, hfc/heart/heart-nano gender is undocumented
+   kristin is female-named, hfc/heart/heart-nano gender is undocumented
    in the README/demo. This build therefore does NOT meet Evan's
    "male voice, because it's Tiny Tim" requirement as documented; it is a
    technical proof that a non-ONNX engine can speak at all. Do NOT relabel
-   amy as male. Parent/Evan must decide whether to accept amy, try hfc/heart
+   hfc as male. Parent/Evan must decide whether to accept hfc
    unlabelled, or reject sanoTTS on voice grounds.
    API (sanotts-web npm README): SanoTTS.load() (assetBase defaults to the
    hosted demo https://ampixa.github.io/sanoTTS/), tts.synthesize(text,
-   {voice}) -> {samples: Float32Array, sampleRate, phonemeCount, elapsedMs},
+   {voice, lengthScale}) -> {samples: Float32Array, sampleRate, phonemeCount, elapsedMs},
    tts.loadVoice(key) to pre-download. Samples are converted here to a WAV
    Blob and played through the existing WebAudio/DOM playback + diagnostics,
    so a failure is visible, not silent. No speechSynthesis substitution.
-   First tap downloads the WASM runtime + amy voice once, then caches. */
+   First tap downloads the WASM runtime + hfc voice once, then caches. */
 const SANO_VOICE = "hfc";
+const SANO_LENGTH_SCALE = 1.15;
 const SANO_SOURCES = ["https://cdn.jsdelivr.net/npm/sanotts-web@latest/+esm", "https://esm.sh/sanotts-web@latest"];
 let sanoPromise = null, sanoTts = null;
 function loadVoiceEngine() {
@@ -407,7 +410,7 @@ function loadVoiceEngine() {
   return sanoPromise;
 }
 function generateWithTimeout(tts, text, ms) {
-  return withTimeout(Promise.resolve().then(function () { return tts.synthesize(text, { voice: SANO_VOICE }); }), ms, "sanoTTS generate").then(function (out) {
+  return withTimeout(Promise.resolve().then(function () { return tts.synthesize(text, { voice: SANO_VOICE, lengthScale: SANO_LENGTH_SCALE }); }), ms, "sanoTTS generate").then(function (out) {
     if (!out || !out.samples || !out.samples.length) throw new Error("the voice model returned no audio");
     return wavBlobFromSamples(out.samples, out.sampleRate);
   });
@@ -416,7 +419,7 @@ function testShortVoice() {
   unlockAudio(); getAudioCtx();
   stopSpeaking();
   const started = new Date();
-  setShortVoiceStatus("Test short voice: generating \"Hi\" with sanoTTS amy\u2026 started " + fmtTime(started) + ". If this passes 30 seconds it will report generate timed out.");
+  setShortVoiceStatus("Test short voice: generating \"Hi\" with sanoTTS hfc\u2026 started " + fmtTime(started) + ". If this passes 30 seconds it will report generate timed out.");
   setVoiceDiag("Test short voice: generating \"Hi\"\u2026 started " + fmtTime(started) + ".");
   const run = speechRun;
   loadVoiceEngine().then(function (tts) {
