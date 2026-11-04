@@ -1,5 +1,5 @@
 <!doctype html>
-<!-- STAGING ONLY — Supertonic VOICE, not live. ONNX Runtime Web, WebGPU first. Single voice M1, documented male (M1–M5 male, F1–F5 female). Live chat.html untouched. REMOVE all staging buttons/diagnostics before any live push. Desktop pass does NOT prove iPhone: iPhone WebGPU is iOS 26+ only and is the gate. -->
+<!-- STAGING ONLY \u2014 sanoTTS VOICE, not live. Non-ONNX WASM engine (see engine comment in script). Single voice hfc; see flag: gender undocumented, do NOT label male. Ear-judgement test only. Live chat.html untouched. REMOVE all staging buttons/diagnostics before any live push. -->
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -105,7 +105,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Ar
       <button class="send-btn" id="sendBtn" title="Send" aria-label="Send">&uarr;</button>
     </div>
     <audio id="voiceAudio" playsinline preload="auto" style="position:absolute;width:1px;height:1px;opacity:0;pointer-events:none" aria-hidden="true"></audio>
-    <div class="staging-note" id="stagingNote"><strong>STAGING ONLY — remove before live:</strong> <button type="button" id="testToneBtn">Test tone</button> <button type="button" id="testShortVoiceBtn">Test short voice</button> <span id="testToneStatus">Tap Test tone first: if you hear a beep, the iPhone audio path works. If no beep, the phone/browser is blocking audio.</span> <span id="shortVoiceStatus">Test short voice: generates only the word Hi with Supertonic M1 (documented male). WebGPU first; if WebGPU is unavailable, the WASM fallback is reported as a FAILURE, not used silently. If generation takes more than 30 seconds it will visibly report generate timed out instead of hanging on Stop forever.</span></div>
+    <div class="staging-note" id="stagingNote"><strong>STAGING ONLY — remove before live:</strong> <button type="button" id="testToneBtn">Test tone</button> <button type="button" id="testShortVoiceBtn">Test short voice</button> <span id="testToneStatus">Tap Test tone first: if you hear a beep, the iPhone audio path works. If no beep, the phone/browser is blocking audio.</span> <span id="shortVoiceStatus">Test short voice: generates only the word Hi with sanoTTS hfc. If generation takes more than 30 seconds it will visibly report generate timed out instead of hanging on Stop forever.</span></div>
     <div class="staging-note" id="voiceDiag"><strong>STAGING ONLY — voice diagnostics:</strong> <span id="voiceDiagStatus">No voice played yet. After tapping Listen, this line shows, for each chunk: text length, blob bytes, decoded duration, sample rate, channels, peak amplitude, and AudioContext state.</span></div>
     <div class="hint">Powered by Llama 4 Scout through a secure proxy &mdash; no downloads, no key needed.</div>
   </div>
@@ -353,123 +353,90 @@ function playAudioBlob(blob, run, chunkText, chunkIndex, chunkTotal) {
   });
 }
 
-/* ---- STAGING ONLY: voice playback, Supertonic ENGINE ----
-   Supertone Supertonic (Supertonic 3): on-device multilingual TTS,
-   ~99M parameters, 44.1 kHz output, four-stage ONNX pipeline
-   (text encoder, duration predictor, vector estimator, vocoder),
-   run in-browser through ONNX Runtime Web.
-   Voice: M1, documented male. Supertonic publishes 10 preset voices:
-   five male M1–M5 and five female F1–F5, each usable across languages.
-   M1 is therefore reported honestly as documented male — it is NOT
-   relabelled, guessed, or cloned from a reference clip here.
-   Licence flag (do NOT repeat the shorthand "MIT" for the whole thing):
-   sample code is MIT, but a later source reports model weights under
-   OpenRAIL-M and the upstream repository as archived (support ended,
-   notice dated 2026-07-23). Treat code licence and weight licence as
-   separate production checks before any live use.
-   Size: ~380 MB one-time download for Supertonic 3 (from published
-   file sizes: vector_estimator ~244.7 MiB, vocoder ~96.7 MiB,
-   text_encoder ~34.7 MiB, duration_predictor ~3.5 MiB). Cached after
-   first load; first tap on a phone will be slow and data-heavy.
-   WebGPU GATE (the whole point of this build):
-   - WebGPU is forced FIRST. Sessions are requested with
-     executionProviders ["webgpu"] only in this staging build.
-   - If navigator.gpu is missing, or adapter/device creation fails,
-     loadVoiceEngine REJECTS with a clear WASM-fallback failure report:
-     "WebGPU unavailable — WASM fallback reported as failure, not used
-     silently." WASM is NOT silently substituted, because threaded
-     ONNX Runtime WASM (ort-wasm-simd-threaded.jsep.mjs) is the file
-     that already failed for other threaded-ORT engines on GitHub
-     Pages, which cannot set COOP/COEP headers for SharedArrayBuffer.
-   - iPhone WebGPU is iOS 26+ only. A desktop WebGPU pass therefore
-     does NOT prove iPhone. The iPhone test is the gate.
-   HONEST PIPELINE STATUS (read before testing):
-   Upstream publishes a browser example (web/ in the Supertonic repo,
-   onnxruntime-web, WebGPU/WASM) and the four ONNX stages with known
-   stage inputs (duration predictor: text_ids/style_dp/text_mask;
-   text encoder: text_ids/style_ttl/text_mask). That example's full
-   tensor I/O, vector-estimator denoising loop, vocoder call, M1
-   style-tensor loading, and Unicode text preprocessing (tts.json /
-   unicode_indexer.json) have NOT been ported and verified in this
-   file. This staging build therefore does the honest, testable part
-   — WebGPU gate + ONNX Runtime Web load — and then REJECTS synthesis
-   with a labelled incomplete-pipeline error naming exactly what is
-   missing, instead of pretending to speak. Do NOT promote this file
-   to live under any circumstances until a verified wrapper replaces
-   that rejection with real synthesis. No speechSynthesis substitution.
-   No other engine code is present in this file. */
-const SUPERTONIC_VOICE = "M1";
-const SUPERTONIC_SIZE_NOTE = "~380 MB one-time download, cached after first load";
-const ORT_SOURCES = ["https://cdn.jsdelivr.net/npm/onnxruntime-web@1.22.0/dist/ort.webgpu.min.js", "https://cdn.jsdelivr.net/npm/onnxruntime-web@1.22.0/dist/ort.min.js", "https://esm.sh/onnxruntime-web@1.22.0"];
-let supertonicPromise = null, supertonicEngine = null;
+/* ---- STAGING ONLY: voice playback, sanoTTS ENGINE ----
+   sanoTTS (Ampixa, GPL-3.0): a tiny neural TTS family, 294k-2.3M params,
+   custom Emscripten WASM (NOT ONNX Runtime, NOT threaded ORT) + bundled
+   espeak-ng phonemizer. This is why it may avoid the failure that killed
+   Piper and Kitten: neither engine ever loads ort-wasm-simd-threaded.jsep.mjs,
+   and GitHub Pages cannot set COOP/COEP, which threaded WASM needs for
+   SharedArrayBuffer. WASM runtime ~2.7 MB uncompressed (~700 KB gzipped
+   over the wire per the project README).
+   Voice: hfc, English, gender undocumented — ear-judgement test only, do NOT label male
+   (SCOREQ 4.13 / UTMOS 4.10 in the project README), ~3 MB fp16 / 5.6 MB fp32.
+   HONEST FLAG: sanoTTS publishes NO documented male English voice.
+   amy/kristin are female-named, hfc/heart/heart-nano gender is undocumented
+   in the README/demo. This build therefore does NOT meet Evan's
+   "male voice, because it's Tiny Tim" requirement as documented; it is a
+   technical proof that a non-ONNX engine can speak at all. Do NOT relabel
+   amy as male. Parent/Evan must decide whether to accept amy, try hfc/heart
+   unlabelled, or reject sanoTTS on voice grounds.
+   API (sanotts-web npm README): SanoTTS.load() (assetBase defaults to the
+   hosted demo https://ampixa.github.io/sanoTTS/), tts.synthesize(text,
+   {voice}) -> {samples: Float32Array, sampleRate, phonemeCount, elapsedMs},
+   tts.loadVoice(key) to pre-download. Samples are converted here to a WAV
+   Blob and played through the existing WebAudio/DOM playback + diagnostics,
+   so a failure is visible, not silent. No speechSynthesis substitution.
+   First tap downloads the WASM runtime + amy voice once, then caches. */
+const SANO_VOICE = "hfc";
+const SANO_SOURCES = ["https://cdn.jsdelivr.net/npm/sanotts-web@latest/+esm", "https://esm.sh/sanotts-web@latest"];
+let sanoPromise = null, sanoTts = null;
 function loadVoiceEngine() {
-  if (supertonicEngine) return Promise.resolve(supertonicEngine);
-  if (!supertonicPromise) {
-    supertonicPromise = (function () {
-      // Step 1: WebGPU gate, forced first.
-      if (typeof navigator === "undefined" || !navigator.gpu) {
-        return Promise.reject(new Error("Supertonic WebGPU gate FAILED: navigator.gpu is unavailable in this browser/device — WASM fallback reported as failure, not used silently. iPhone WebGPU is iOS 26+ only; this is the gate, and a desktop pass does not prove iPhone."));
-      }
-      return Promise.resolve().then(function () { return navigator.gpu.requestAdapter(); }).then(function (adapter) {
-        if (!adapter) throw new Error("Supertonic WebGPU gate FAILED: navigator.gpu exists but requestAdapter() returned no adapter — WASM fallback reported as failure, not used silently. iPhone WebGPU is iOS 26+ only.");
-        return adapter.requestDevice();
-      }).then(function (device) {
-        if (!device) throw new Error("Supertonic WebGPU gate FAILED: adapter exists but requestDevice() returned no device — WASM fallback reported as failure, not used silently.");
-        // Step 2: ONNX Runtime Web load, WebGPU provider only.
-        const failures = [];
-        function trySource(i) {
-          if (i >= ORT_SOURCES.length) return Promise.reject(new Error("the Supertonic voice library failed to load — " + failures.join(" · ")));
-          const url = ORT_SOURCES[i];
-          return withTimeout(Promise.resolve().then(function () { return import(url); }), 60000, "Supertonic ONNX Runtime Web import (" + url + ")")
-            .then(function (mod) {
-              const ort = mod && (mod.ort || mod.default);
-              if (!ort || !ort.InferenceSession || typeof ort.InferenceSession.create !== "function") throw new Error("onnxruntime-web loaded but exposed no InferenceSession.create");
-              return { ort: ort, device: device };
-            })
-            .catch(function (err) { failures.push(url + " → " + (err && err.message ? err.message : err)); return trySource(i + 1); });
-        }
-        return trySource(0);
-      }).then(function (loaded) {
-        // Step 3: honest stop — pipeline not yet wired in this file.
-        supertonicEngine = { ort: loaded.ort, device: loaded.device, voice: SUPERTONIC_VOICE, webgpu: true };
-        return supertonicEngine;
-      });
-    })();
-    supertonicPromise.catch(function () { if (supertonicPromise) supertonicPromise = null; });
+  if (sanoTts) return Promise.resolve(sanoTts);
+  if (!sanoPromise) {
+    const failures = [];
+    function trySource(i) {
+      if (i >= SANO_SOURCES.length) return Promise.reject(new Error("the sanoTTS voice library failed to load \u2014 " + failures.join(" \u00b7 ")));
+      const url = SANO_SOURCES[i];
+      return withTimeout(Promise.resolve().then(function () { return import(url); }), 60000, "sanoTTS library import (" + url + ")")
+        .then(function (mod) {
+          const SanoTTS = mod && (mod.SanoTTS || (mod.default && mod.default.SanoTTS));
+          if (!SanoTTS || typeof SanoTTS.load !== "function") throw new Error("the module loaded but exposed no SanoTTS.load function");
+          return withTimeout(Promise.resolve().then(function () { return SanoTTS.load(); }), 300000, "sanoTTS runtime load").then(function (tts) {
+            if (!tts || typeof tts.synthesize !== "function") throw new Error("sanoTTS loaded but exposed no synthesize function");
+            if (typeof tts.loadVoice === "function") {
+              return withTimeout(Promise.resolve().then(function () { return tts.loadVoice(SANO_VOICE); }), 300000, "sanoTTS voice download").then(function () { return tts; });
+            }
+            return tts;
+          });
+        })
+        .catch(function (err) { failures.push(url + " \u2192 " + (err && err.message ? err.message : err)); return trySource(i + 1); });
+    }
+    sanoPromise = trySource(0).then(function (tts) { sanoTts = tts; return tts; });
+    sanoPromise.catch(function () { if (sanoPromise) sanoPromise = null; });
   }
-  return supertonicPromise;
+  return sanoPromise;
 }
-function generateWithTimeout(engine, text, ms) {
-  return withTimeout(Promise.resolve().then(function () {
-    if (!engine || !engine.webgpu) throw new Error("Supertonic WebGPU gate FAILED: no WebGPU engine — WASM fallback reported as failure, not used silently.");
-    throw new Error("EXPERIMENTAL — incomplete pipeline: Supertonic WebGPU gate passed and ONNX Runtime Web loaded, but the four-stage synthesis wrapper (duration predictor → text encoder → vector estimator → vocoder, M1 style tensors, Unicode text preprocessing) has not been ported and verified in this file, so no speech can be generated yet. This is not a working voice; do not promote it live. Model size for a full port: " + SUPERTONIC_SIZE_NOTE + ".");
-  }), ms, "Supertonic generate");
+function generateWithTimeout(tts, text, ms) {
+  return withTimeout(Promise.resolve().then(function () { return tts.synthesize(text, { voice: SANO_VOICE }); }), ms, "sanoTTS generate").then(function (out) {
+    if (!out || !out.samples || !out.samples.length) throw new Error("the voice model returned no audio");
+    return wavBlobFromSamples(out.samples, out.sampleRate);
+  });
 }
 function testShortVoice() {
   unlockAudio(); getAudioCtx();
   stopSpeaking();
   const started = new Date();
-  setShortVoiceStatus("Test short voice: generating \"Hi\" with Supertonic M1 (documented male)… started " + fmtTime(started) + ". WebGPU first; WASM fallback is reported as a failure, not used silently. If this passes 30 seconds it will report generate timed out.");
-  setVoiceDiag("Test short voice: generating \"Hi\" with Supertonic M1… started " + fmtTime(started) + ". WebGPU gate first.");
+  setShortVoiceStatus("Test short voice: generating \"Hi\" with sanoTTS amy\u2026 started " + fmtTime(started) + ". If this passes 30 seconds it will report generate timed out.");
+  setVoiceDiag("Test short voice: generating \"Hi\"\u2026 started " + fmtTime(started) + ".");
   const run = speechRun;
-  loadVoiceEngine().then(function (engine) {
+  loadVoiceEngine().then(function (tts) {
     if (run !== speechRun) return;
     const genStarted = new Date();
-    setShortVoiceStatus("Test short voice: Supertonic WebGPU gate passed, ONNX Runtime Web loaded, generating \"Hi\"… generating started " + fmtTime(genStarted) + ".");
-    return generateWithTimeout(engine, "Hi", 30000).then(function (blob) {
+    setShortVoiceStatus("Test short voice: sanoTTS loaded, generating \"Hi\"\u2026 generating started " + fmtTime(genStarted) + ".");
+    return generateWithTimeout(tts, "Hi", 30000).then(function (blob) {
       if (run !== speechRun) return;
       const genFinished = new Date();
       const secs = ((genFinished - genStarted) / 1000).toFixed(1);
-      setShortVoiceStatus("Test short voice: generate finished " + fmtTime(genFinished) + " (" + secs + "s after generating started) · blob " + blob.size + " bytes · playing…");
+      setShortVoiceStatus("Test short voice: generate finished " + fmtTime(genFinished) + " (" + secs + "s after generating started) \u00b7 blob " + blob.size + " bytes \u00b7 playing\u2026");
       return playAudioBlob(blob, run, "Hi", 1, 1).then(function () {
-        setShortVoiceStatus("Test short voice: DONE — generating started " + fmtTime(genStarted) + ", generate finished " + fmtTime(genFinished) + " (" + secs + "s) · blob " + blob.size + " bytes · played to the end. Did you hear \"Hi\"?");
+        setShortVoiceStatus("Test short voice: DONE \u2014 generating started " + fmtTime(genStarted) + ", generate finished " + fmtTime(genFinished) + " (" + secs + "s) \u00b7 blob " + blob.size + " bytes \u00b7 played to the end. Did you hear \"Hi\"?");
       });
     });
   }).catch(function (err) {
     if (run !== speechRun) return;
     const msg = err && err.message ? err.message : String(err);
     const timedOut = /timed out/i.test(msg);
-    setShortVoiceStatus("Test short voice: " + (timedOut ? "generate timed out after 30 seconds — Supertonic did not finish generating \"Hi\" in time." : "FAILED: " + msg));
+    setShortVoiceStatus("Test short voice: " + (timedOut ? "generate timed out after 30 seconds \u2014 sanoTTS did not finish generating \"Hi\" in time." : "FAILED: " + msg));
     setVoiceDiag("Test short voice: " + (timedOut ? "generate timed out after 30 seconds." : "FAILED: " + msg));
   });
 }
