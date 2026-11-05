@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="color-scheme" content="light dark">
 <link rel="icon" href="data:,">
-<title>Tiny Tim — Chat</title>
+<title>STAGING Tiny Tim — Chat</title>
 <style>
 :root{
 --bg:#f2f3f5; --surface:#ffffff; --surface2:#eef0f3; --text:#111318; --muted:#6b7280; --line:#e2e4e8;
@@ -611,7 +611,7 @@ function friendlyError(status) {
 }
 /* ---- Sign-in gating, SERVER-ENFORCED (staging, 2026-11-04) ----
    10 chats/day before sign-in, then sign in, then another 10 chats/day,
-   then the paywall (owner sets it up). The ENFORCER is now the Worker:
+   then the daily-limit message. The ENFORCER is now the Worker:
    it counts chats server-side in D1 (chat_daily_counts, count-only --
    identity hash + UTC day + count, no chat text, no pictures, no
    history). Clearing browser data, switching browsers, or editing
@@ -628,9 +628,15 @@ function friendlyError(status) {
    the display key and the server day agree. Old local keys
    (tinyTimVisitorChats_YYYY-M-D, local date) are orphaned -- harmless,
    they are never read again. The day resets at midnight UTC
-   (7pm EST / 8pm EDT), not at local midnight. No owner bypass: Evan
-   has not authorized one, so there is no owner check in this file. */
+   (7pm EST / 8pm EDT), not at local midnight. Owner bypass
+   (2026-11-05 ~12:25, Evan authorized): when the Worker says
+   owner (GET /v1/chat/count `owner:true`, or a POST response
+   header X-TinyTim-Owner: "1"), gateOwner is true and the
+   display-only early stop and the after-10 bubble never trigger
+   for the owner. The Worker is the enforcer — the page flag is
+   display-only and grants nothing on its own. */
 var GATE_LIMIT = 10;
+var gateOwner = false;
 var gateAuthReady = false;
 var gateUser = null;
 var gateFirebaseUser = null;
@@ -657,8 +663,9 @@ function gateCount() { try { return parseInt(localStorage.getItem(gateKey()) || 
    (GET /v1/chat/count, no increment) and after every send (from the
    X-TinyTim-Used response header). Never called to decide whether a
    send is allowed -- the POST itself decides. */
-function gateSyncDisplay(used, limit) {
+function gateSyncDisplay(used, limit, owner) {
   try {
+    if (owner === true) { gateOwner = true; used = 0; }
     if (typeof used === "number" && used >= 0) localStorage.setItem(gateKey(), String(used));
     if (typeof limit === "number" && limit > 0) GATE_LIMIT = limit;
   } catch (e) {}
@@ -671,7 +678,7 @@ async function gateSyncFromServer() {
     var res = await fetch(COUNT_URL, { method: "GET", headers: headers });
     if (!res.ok) return;
     var data = await res.json();
-    if (data && typeof data.used === "number") gateSyncDisplay(data.used, data.limit);
+    if (data && typeof data.used === "number") gateSyncDisplay(data.used, data.limit, data.owner === true);
   } catch (e) { /* Display sync is best-effort: a failed sync never blocks a send. */ }
 }
 function gateRemaining() { return Math.max(0, GATE_LIMIT - gateCount()); }
@@ -680,12 +687,12 @@ function gateRefreshBar() {
   if (bar) bar.style.display = "none";
 }
 function gateSignInBubble() {
-  if (gateUser) { addBubble("in", "<p>You have reached your daily limit of 10 chats after sign-in. The paywall is coming soon.</p>"); }
+  if (gateUser) { addBubble("in", "<p>You have reached your daily limit of 10 chats after sign-in.</p>"); }
   else { addBubble("in", "<p>You have used 10 chats today. <a href=\"tiny-signin.html\" style=\"color:var(--blue)\">Sign in to get another 10 chats a day</a></p>"); }
 }
 var gatePromptShown = false;
 function gateBlockMessage() {
-  if (gateUser) return "You have reached your daily limit of 10 chats after sign-in. The paywall is coming soon.";
+  if (gateUser) return "You have reached your daily limit of 10 chats after sign-in.";
   return "You have used 10 chats today. Sign in to get another 10 chats a day: tiny-signin.html";
 }
 async function send() {
@@ -697,8 +704,8 @@ async function send() {
   /* Display-only early stop: saves a round-trip when the mirrored
      count already says the bucket is full. NOT enforcement -- a stale
      or cleared localStorage simply falls through to the POST, and the
-     Worker is the one that blocks at 10. */
-  if (gateCount() >= GATE_LIMIT) { gateSyncFromServer(); gateSignInBubble(); setTinyAvatar("normal"); return; }
+     Worker is the one that blocks at 10. Owner never hits this stop. */
+  if (!gateOwner && gateCount() >= GATE_LIMIT) { gateSyncFromServer(); gateSignInBubble(); setTinyAvatar("normal"); return; }
   gateRefreshBar();
   const images = pendingImages.slice();
   pendingImages = [];
@@ -740,12 +747,13 @@ async function send() {
     });
     /* Sync the display count from the server's headers on EVERY
        response (success or limit). The server's used count is the
-       truth; localStorage just mirrors it. */
-    try { var usedHdr = res.headers.get("X-TinyTim-Used"); var limHdr = res.headers.get("X-TinyTim-Limit"); if (usedHdr !== null) gateSyncDisplay(parseInt(usedHdr, 10), limHdr !== null ? parseInt(limHdr, 10) : GATE_LIMIT); } catch (e) {}
+       truth; localStorage just mirrors it. Owner header sets
+       gateOwner so the display never fills up for the owner. */
+    try { var usedHdr = res.headers.get("X-TinyTim-Used"); var limHdr = res.headers.get("X-TinyTim-Limit"); var ownHdr = res.headers.get("X-TinyTim-Owner"); if (ownHdr === "1") gateOwner = true; if (usedHdr !== null) gateSyncDisplay(parseInt(usedHdr, 10), limHdr !== null ? parseInt(limHdr, 10) : GATE_LIMIT, gateOwner); } catch (e) {}
     if (res.status === 429) {
       /* Authoritative limit: the Worker says this bucket is at 10.
          Show the v7 after-10 bubble (sign-in prompt for visitors,
-         paywall message for signed-in visitors) and do NOT retry.
+         daily-limit message for signed-in visitors) and do NOT retry.
          The user bubble for this send stays; the reply is the limit. */
       try { var errBody = await res.json(); if (errBody && errBody.code === "chat_limit") { gateSignInBubble(); return; } } catch (e) {}
       throw new Error("http429");
@@ -757,7 +765,7 @@ async function send() {
     if (typeof reply !== "string" || !reply.trim()) throw new Error("empty");
     history.push({ role: "assistant", content: reply });
     addSpeakButton(addBubble("in", md(reply)), reply);
-    if (gateCount() >= GATE_LIMIT && !gatePromptShown) { gatePromptShown = true; gateSignInBubble(); }
+    if (!gateOwner && gateCount() >= GATE_LIMIT && !gatePromptShown) { gatePromptShown = true; gateSignInBubble(); }
   } catch (err) {
     const m = /^http(\d+)$/.exec(String(err && err.message));
     addBubble("in", "<p>" + esc(friendlyError(m ? +m[1] : 0)) + "</p>", "error");
@@ -943,6 +951,7 @@ try {
        fresh signed-in 10. Sync the display from the server so the
        local mirror switches to the signed-in bucket's count. */
     gatePromptShown = false;
+    gateOwner = false; /* re-derived from the server on every sync */
     gateSyncFromServer();
   });
 } catch (e) {
