@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="color-scheme" content="light dark">
 <link rel="icon" href="data:,">
-<title>STAGING Tiny Tim — Chat</title>
+<title>Tiny Tim — Chat</title>
 <style>
 :root{
 --bg:#f2f3f5; --surface:#ffffff; --surface2:#eef0f3; --text:#111318; --muted:#6b7280; --line:#e2e4e8;
@@ -609,23 +609,71 @@ function friendlyError(status) {
   if (status === 400) return "That request was rejected. Try a shorter message or a smaller picture.";
   return "Something went wrong reaching Tiny Tim. Please try again.";
 }
-/* ---- Sign-in gating (2026-11-04, Evan's locked funnel) ----
+/* ---- Sign-in gating, SERVER-ENFORCED (staging, 2026-11-04) ----
    10 chats/day before sign-in, then sign in, then another 10 chats/day,
-   then the paywall (owner sets it up). Counts live ONLY in this browser's
-   localStorage, keyed by day (and by signed-in user id when signed in).
-   No chat text, no pictures, no conversation history is stored anywhere
-   by this gating code. This is client-side enforcement: it is the honest
-   visitor-facing limit, not a server-proof cap. */
+   then the paywall (owner sets it up). The ENFORCER is now the Worker:
+   it counts chats server-side in D1 (chat_daily_counts, count-only --
+   identity hash + UTC day + count, no chat text, no pictures, no
+   history). Clearing browser data, switching browsers, or editing
+   localStorage cannot reset the server count.
+   localStorage below is DISPLAY ONLY: it mirrors the server's used
+   count so the page can show the after-10 bubble without an extra
+   round-trip. It never grants a chat. The only place a chat is allowed
+   or blocked is the Worker's 429 with code "chat_limit".
+   *** UTC-DATE MISMATCH, FIXED HERE: the v7 page used the visitor's
+   LOCAL date (gateToday) while the Worker has always used UTC. At
+   e.g. 20:00 EST the server day is already tomorrow, so the v7 local
+   key pointed at the wrong day's count. This staging page switches
+   the local key to the UTC day (zero-padded, same as the server) so
+   the display key and the server day agree. Old local keys
+   (tinyTimVisitorChats_YYYY-M-D, local date) are orphaned -- harmless,
+   they are never read again. The day resets at midnight UTC
+   (7pm EST / 8pm EDT), not at local midnight. No owner bypass: Evan
+   has not authorized one, so there is no owner check in this file. */
 var GATE_LIMIT = 10;
 var gateAuthReady = false;
 var gateUser = null;
-function gateToday() { var d = new Date(); return d.getFullYear() + "-" + (d.getMonth()+1) + "-" + d.getDate(); }
+var gateFirebaseUser = null;
+/* Fresh Firebase ID token, or null. Firebase caches the token
+   internally and refreshes it when expired, so calling getIdToken()
+   per send/sync is cheap. A failure here never blocks a send — the
+   Worker falls back to the visitor bucket. The token is never stored
+   in localStorage and never logged. */
+async function getGateIdToken() {
+  try {
+    if (!gateFirebaseUser || typeof gateFirebaseUser.getIdToken !== "function") return null;
+    var t = await gateFirebaseUser.getIdToken();
+    return (typeof t === "string" && t) ? t : null;
+  } catch (e) { return null; }
+}
+var COUNT_URL = "https://echo-chat-llama-proxy.evan996.workers.dev/v1/chat/count";
+function gateToday() { var d = new Date(); return d.toISOString().slice(0, 10); }
 function gateKey() {
   if (gateUser && gateUser.uid) return "tinyTimSignedChats_" + gateUser.uid + "_" + gateToday();
   return "tinyTimVisitorChats_" + gateToday();
 }
 function gateCount() { try { return parseInt(localStorage.getItem(gateKey()) || "0", 10) || 0; } catch (e) { return 0; } }
-function gateBump() { try { localStorage.setItem(gateKey(), String(gateCount() + 1)); } catch (e) {} }
+/* Display-only sync from the server. Called on load / sign-in change
+   (GET /v1/chat/count, no increment) and after every send (from the
+   X-TinyTim-Used response header). Never called to decide whether a
+   send is allowed -- the POST itself decides. */
+function gateSyncDisplay(used, limit) {
+  try {
+    if (typeof used === "number" && used >= 0) localStorage.setItem(gateKey(), String(used));
+    if (typeof limit === "number" && limit > 0) GATE_LIMIT = limit;
+  } catch (e) {}
+}
+async function gateSyncFromServer() {
+  try {
+    var headers = {};
+    var tok = await getGateIdToken();
+    if (tok) headers["X-TinyTim-Id-Token"] = tok;
+    var res = await fetch(COUNT_URL, { method: "GET", headers: headers });
+    if (!res.ok) return;
+    var data = await res.json();
+    if (data && typeof data.used === "number") gateSyncDisplay(data.used, data.limit);
+  } catch (e) { /* Display sync is best-effort: a failed sync never blocks a send. */ }
+}
 function gateRemaining() { return Math.max(0, GATE_LIMIT - gateCount()); }
 function gateRefreshBar() {
   var bar = document.getElementById("gateBar");
@@ -646,8 +694,11 @@ async function send() {
   setTinyAvatar("thinking");
   const text = inputEl.value.trim();
   if ((!text && !pendingImages.length) || sendBtn.disabled) { setTinyAvatar("normal"); return; }
-  if (gateCount() >= GATE_LIMIT) { gateSignInBubble(); setTinyAvatar("normal"); return; }
-  gateBump();
+  /* Display-only early stop: saves a round-trip when the mirrored
+     count already says the bucket is full. NOT enforcement -- a stale
+     or cleared localStorage simply falls through to the POST, and the
+     Worker is the one that blocks at 10. */
+  if (gateCount() >= GATE_LIMIT) { gateSyncFromServer(); gateSignInBubble(); setTinyAvatar("normal"); return; }
   gateRefreshBar();
   const images = pendingImages.slice();
   pendingImages = [];
@@ -676,11 +727,29 @@ async function send() {
       temperature: 0.7,
       max_tokens: 1024
     };
+    /* Signed-in proof: a Firebase ID token, verified server-side
+       against Google JWKS for tiny-tim-e6f1e. No bare UID is sent —
+       a bare UID is not proof of identity. If no token is available
+       the Worker falls back to the visitor bucket. */
+    var idTok = await getGateIdToken();
+    if (idTok) payload.tiny_tim_id_token = idTok;
     const res = await fetch(WORKER_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload)
     });
+    /* Sync the display count from the server's headers on EVERY
+       response (success or limit). The server's used count is the
+       truth; localStorage just mirrors it. */
+    try { var usedHdr = res.headers.get("X-TinyTim-Used"); var limHdr = res.headers.get("X-TinyTim-Limit"); if (usedHdr !== null) gateSyncDisplay(parseInt(usedHdr, 10), limHdr !== null ? parseInt(limHdr, 10) : GATE_LIMIT); } catch (e) {}
+    if (res.status === 429) {
+      /* Authoritative limit: the Worker says this bucket is at 10.
+         Show the v7 after-10 bubble (sign-in prompt for visitors,
+         paywall message for signed-in visitors) and do NOT retry.
+         The user bubble for this send stays; the reply is the limit. */
+      try { var errBody = await res.json(); if (errBody && errBody.code === "chat_limit") { gateSignInBubble(); return; } } catch (e) {}
+      throw new Error("http429");
+    }
     if (!res.ok) throw new Error("http" + res.status);
     const data = await res.json();
     const msg = data && data.choices && data.choices[0] && data.choices[0].message;
@@ -829,6 +898,7 @@ sendBtn.addEventListener("click", send);
   addSpeakButton(addBubble("in", md("Hi, I'm Tiny Tim. I'm powered by Llama 4 Maverick FP8, and I'm here to help you identify wildlife in your pictures. Feel free to ask me anything, or attach a picture and I'll take a look.")), "Hi, I'm Tiny Tim. I'm powered by Llama 4 Maverick FP8, and I'm here to help you identify wildlife in your pictures. Feel free to ask me anything, or attach a picture and I'll take a look.");
   try { Object.keys(TINY_AVATARS).forEach(function (k) { const p = new Image(); p.src = TINY_AVATARS[k].src; }); } catch (e) {}
   autoresize();
+  gateSyncFromServer();
 })();
 </script>
 <script>
@@ -865,9 +935,15 @@ try {
   var auth = getAuth(app);
   window.__tinySignOut = function () { signOut(auth).catch(function () {}); };
   onAuthStateChanged(auth, function (user) {
+    gateFirebaseUser = user || null;
     gateUser = user ? { uid: user.uid, email: user.email } : null;
     gateAuthReady = true;
     gateRefreshBar();
+    /* New bucket, new count: a visitor who signs in mid-day gets a
+       fresh signed-in 10. Sync the display from the server so the
+       local mirror switches to the signed-in bucket's count. */
+    gatePromptShown = false;
+    gateSyncFromServer();
   });
 } catch (e) {
   gateAuthReady = true;
