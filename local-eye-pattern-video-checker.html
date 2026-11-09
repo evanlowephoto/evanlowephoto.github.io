@@ -87,6 +87,11 @@ h1 em{font-style:italic;color:var(--teal)}
 .mark.micro{background:var(--gold);width:13px;height:13px}
 .mark.head{background:var(--cyan)}
 .mark.body{background:var(--slate)}
+.mark.morse{background:#c2410c;border-radius:3px;transform:translate(-50%,-50%) rotate(45deg);width:12px;height:12px}
+.morse-msg{font-family:"IBM Plex Mono",monospace;font-size:23px;font-weight:600;letter-spacing:.1em;line-height:1.35;word-break:break-word;background:var(--surface2);border:1px solid var(--line);border-radius:10px;padding:12px 14px;min-height:58px}
+.morse-pattern{font-family:"IBM Plex Mono",monospace;font-size:15.5px;line-height:1.6;letter-spacing:.04em;word-break:break-word;background:var(--surface2);border:1px solid var(--line);border-radius:10px;padding:10px 14px;min-height:44px}
+.morse-key{font-family:"IBM Plex Mono",monospace;font-size:12px;line-height:1.9;color:var(--muted);word-break:break-word}
+.morse-key b{color:var(--ink)}
 .leadtag{display:inline-block;font-family:"IBM Plex Mono",monospace;font-size:10.5px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;background:var(--amber-bg);border:1px solid var(--amber);color:var(--ink);padding:2px 8px;border-radius:999px;vertical-align:3px;margin-left:6px}
 .legend{display:flex;flex-wrap:wrap;gap:14px;font-size:12.5px;color:var(--muted);margin-top:8px}
 .legend i{width:10px;height:10px;border-radius:50%;display:inline-block;margin-right:5px;vertical-align:-1px}
@@ -138,6 +143,8 @@ footer{margin-top:22px;font-size:13px;color:var(--muted)}
 .vpill.out{background:var(--red-bg);border-color:var(--red)}
 .vpill.none{color:var(--muted)}
 .vpill small{display:block;font-weight:600;font-size:11.5px}
+.vpill.morse{background:var(--sky-bg);border-color:var(--sky)}
+.vpill.morseflag{background:var(--red-bg);border-color:var(--red)}
 @media(max-width:860px){.vhead{display:none}.vrow{grid-template-columns:1fr;gap:5px;padding:14px 0}.vrow .range{color:var(--ink)}}
 .verdict-why{margin-top:14px;border:1px solid var(--line);border-radius:10px;padding:14px 16px;background:var(--surface)}
 .verdict-why h3{margin:0 0 6px;font-size:15px}
@@ -149,7 +156,7 @@ footer{margin-top:22px;font-size:13px;color:var(--muted)}
 <div class="wrap">
   <div class="kicker">Proof of concept · Video-only · Runs in this tab</div>
   <h1>Count the blinks. <em>Keep the video.</em></h1>
-  <p class="lede">Bring a video you already have. This checker watches the eyes frame by frame — right here on your device — and counts blinks, winks, and unusual eye patterns. Its lead layer watches for micro-expressions — tiny involuntary twitches around the eyes and mouth — and checks them against the spoken cadence, alongside breathing, head, and posture layers. It also tracks gaze, logging every time the eyes break off the camera, and compares frame to frame to catch every edit and stutter, and checks whether the lips and the voice actually line up. Nothing is uploaded, nothing is saved, and the file is dropped from memory the moment you remove it.</p>
+  <p class="lede">Bring a video you already have. This checker watches the eyes frame by frame — right here on your device — and counts blinks, winks, and unusual eye patterns. Its lead layer watches for micro-expressions — tiny involuntary twitches around the eyes and mouth — and checks them against the spoken cadence, alongside breathing, head, and posture layers. It also tracks gaze, logging every time the eyes break off the camera, and compares frame to frame to catch every edit and stutter, and checks whether the lips and the voice actually line up. It also re-reads the blink stream itself as code — classifying each blink by how long the eyes stayed closed and decoding the dots and dashes with the full International Morse code set — letters, numbers, punctuation, and prosigns. Nothing is uploaded, nothing is saved, and the file is dropped from memory the moment you remove it.</p>
 
   <div class="chips">
     <span class="chip"><span class="dot"></span> 100% on-device analysis</span>
@@ -207,6 +214,7 @@ footer{margin-top:22px;font-size:13px;color:var(--muted)}
           <span><i style="background:#ca8a04"></i>Micro-expression</span>
           <span><i style="background:#0891b2"></i>Head tilt / turn</span>
           <span><i style="background:#64748b"></i>Posture / shoulder / breathing</span>
+          <span><i style="background:#c2410c;border-radius:2px;transform:rotate(45deg)"></i>Morse character / prosign (from blinks)</span>
           <span>Tap a marker to jump the video to that moment.</span>
         </div>
       </div>
@@ -292,6 +300,30 @@ footer{margin-top:22px;font-size:13px;color:var(--muted)}
         <p class="threshnote" style="margin-top:10px">*Rate uses only the portion of the video analyzed so far, and only while a face was visible. It settles as more of the clip is watched.</p>
       </section>
 
+      <section class="card" style="margin-top:18px" aria-label="Morse code in the blinks">
+        <h2>Morse code in the blinks</h2>
+        <p class="small" style="margin-top:0">Every both-eyes closure from the eye readout is re-read as a Morse element — short blink, dot; long blink, dash — grouped into letters, words, and punctuation by the pauses between blinks, and decoded with the <b>full International Morse code set</b> (the ITU standard): all 26 letters, digits 0–9, punctuation (. , ? ' ! / ( ) &amp; : ; = − _ " $ @), and prosigns. Prosigns are sent run together, with no letter gap, so they decode <b>distinctly</b> in brackets — <b>[R]</b> received / roger, <b>[AR]</b> end of message, <b>[CQ]</b> calling any station, <b>[SOS]</b> distress — never as the separate letters they are made of.</p>
+        <p style="margin:8px 0"><span class="statepill" id="morsePill">No blinks yet</span></p>
+        <h3 style="margin-top:12px">Decoded message</h3>
+        <div class="morse-msg" id="morseMsg">—</div>
+        <h3>Dot / dash pattern</h3>
+        <div class="morse-pattern" id="morsePattern">No blink sequence yet — the pattern appears here as blinks are counted.</div>
+        <p class="threshnote" style="margin-top:10px"><b>Timing used.</b> Closure under <b>350&nbsp;ms = dot (·)</b>; <b>350&nbsp;ms or more = dash (−)</b> — International Morse has no separate long dash, so a held closure is still one dash. Pauses with the eyes open: under <b>1.1&nbsp;s</b> joins elements inside one character; <b>1.1–2.2&nbsp;s</b> ends a character; over <b>2.2&nbsp;s</b> ends a word. Run-together groups with no character gap are checked against the prosigns first: −·−·−−·− reads as [CQ], ·−·−· as [AR], ···−−−··· as [SOS], and a standalone ·−· (a word by itself) as the prosign [R] rather than the letter R. Groups that match nothing in the international set are shown as � in the message.</p>
+        <div class="stats">
+          <div class="stat"><b id="sMorseEl">0</b><span>Morse elements (blinks)</span></div>
+          <div class="stat"><b id="sMorseLetters">0</b><span>Characters grouped</span></div>
+          <div class="stat"><b id="sMorseValid">—</b><span>Groups decoding to a character / prosign</span></div>
+          <div class="stat"><b id="sMorseWords">0</b><span>Words</span></div>
+        </div>
+        <div class="flag" id="morseFlagBox" style="margin-top:12px"><b id="morseFlagTitle">Coded or natural?</b><p id="morseFlagText">No assessment yet. Natural blinks land seconds apart and decode as isolated single letters (mostly E for a dot, T for a dash). A deliberately blinked message is different: elements come in quick clusters, most groups decode to valid International Morse characters, and multi-element characters appear — that combination is what gets flagged here.</p></div>
+        <h3>International Morse key — letters &amp; digits</h3>
+        <p class="morse-key"><b>A</b> ·− &nbsp;<b>B</b> −··· &nbsp;<b>C</b> −·−· &nbsp;<b>D</b> −·· &nbsp;<b>E</b> · &nbsp;<b>F</b> ··−· &nbsp;<b>G</b> −−· &nbsp;<b>H</b> ···· &nbsp;<b>I</b> ·· &nbsp;<b>J</b> ·−−− &nbsp;<b>K</b> −·− &nbsp;<b>L</b> ·−·· &nbsp;<b>M</b> −− &nbsp;<b>N</b> −· &nbsp;<b>O</b> −−− &nbsp;<b>P</b> ·−−· &nbsp;<b>Q</b> −−·− &nbsp;<b>R</b> ·−· &nbsp;<b>S</b> ··· &nbsp;<b>T</b> − &nbsp;<b>U</b> ··− &nbsp;<b>V</b> ···− &nbsp;<b>W</b> ·−− &nbsp;<b>X</b> −··− &nbsp;<b>Y</b> −·−− &nbsp;<b>Z</b> −−·· &nbsp;<b>1</b> ·−−−− &nbsp;<b>2</b> ··−−− &nbsp;<b>3</b> ···−− &nbsp;<b>4</b> ····− &nbsp;<b>5</b> ····· &nbsp;<b>6</b> −···· &nbsp;<b>7</b> −−··· &nbsp;<b>8</b> −−−·· &nbsp;<b>9</b> −−−−· &nbsp;<b>0</b> −−−−−</p>
+        <h3>International Morse key — punctuation</h3>
+        <p class="morse-key"><b>.</b> ·−·−·− &nbsp;<b>,</b> −−··−− &nbsp;<b>?</b> ··−−·· &nbsp;<b>'</b> ·−−−−· &nbsp;<b>!</b> −·−·−− &nbsp;<b>/</b> −··−· &nbsp;<b>(</b> −·−−· &nbsp;<b>)</b> −·−−·− &nbsp;<b>&amp;</b> ·−··· &nbsp;<b>:</b> −−−··· &nbsp;<b>;</b> −·−·−· &nbsp;<b>=</b> −···− &nbsp;<b>−</b> −····− &nbsp;<b>_</b> ··−−·− &nbsp;<b>"</b> ·−··−· &nbsp;<b>$</b> ···−··− &nbsp;<b>@</b> ·−−·−·</p>
+        <h3>Prosigns (sent run together — decoded distinctly)</h3>
+        <p class="morse-key"><b>[R]</b> ·−· sent as a word by itself — received / roger &nbsp;<b>[AR]</b> ·−·−· run together — end of message &nbsp;<b>[CQ]</b> −·−·−−·− run together — calling any station &nbsp;<b>[SOS]</b> ···−−−··· run together — distress<br><span style="font-size:11.5px">Patterns follow the ITU International Morse set. A run-together [AR] takes precedence over reading the same elements as separate letters; inside a word, ·−· still reads as the letter R.</span></p>
+      </section>
+
       <section class="card" style="margin-top:18px" aria-label="Gaze tracking">
         <h2>Gaze tracking</h2>
         <p style="margin:8px 0"><span class="statepill" id="gazePill">No video yet</span></p>
@@ -351,7 +383,7 @@ footer{margin-top:22px;font-size:13px;color:var(--muted)}
   <section class="card verdict" id="verdictCard" aria-label="Final verdict summary">
     <div class="kicker">End of results</div>
     <h2 style="font-size:22px;margin:6px 0 6px">Final verdict summary</h2>
-    <p class="small" style="margin-top:0;max-width:820px">Every layer from the analysis above, side by side: what was measured in this clip, the normal average range from a reputable source, and whether that layer landed inside or outside the average. A few outside layers are normal — genuine footage trips one or two all the time. This summary only flags a video as showing <b>too many anomalies</b> when <b>3 or more scorable layers</b> are outside the average at once.</p>
+    <p class="small" style="margin-top:0;max-width:820px">Every layer from the analysis above, side by side: what was measured in this clip, the normal average range from a reputable source, and whether that layer landed inside or outside the average. A few outside layers are normal — genuine footage trips one or two all the time. This summary only flags a video as showing <b>too many anomalies</b> when <b>3 or more scorable layers</b> are outside the average at once. The Morse layer is listed too, with its decoded message — it is a pattern decode, not a population average, so it never adds to the anomaly total; a deliberately coded blink pattern is flagged in its own row instead.</p>
 
     <div class="verdict-banner" id="verdictBanner">
       <h3 id="verdictTitle">No verdict yet</h3>
@@ -383,6 +415,7 @@ footer{margin-top:22px;font-size:13px;color:var(--muted)}
         <li><b>Gaze is tracked too.</b> The iris position inside each eye shows where the person is looking. Every break off the camera lasting a quarter-second or more is timed, given a direction, and added to the same timeline and log.</li>
         <li><b>Frames are checked for edits.</b> Consecutive frames are compared directly: a sudden near-total change signals a cut, and frames repeating unchanged signal a stutter or freeze. Both land on the timeline with everything else.</li>
         <li><b>Lips are checked against the sound (idea: Alexa Plus).</b> Mouth openness is measured from the lip landmarks while the audio level is measured from playback through the browser's own audio tools — never recorded. Sound with a still mouth, or a moving mouth in silence, is flagged as a lip-sync mismatch with its timestamp.</li>
+        <li><b>The blinks are tried as International Morse.</b> Each both-eyes closure is classified by duration — under 350 ms a dot, 350 ms or more a dash — and the pauses between blinks group the elements into characters and words. The sequence is decoded against the full International (ITU) Morse set — letters, digits, punctuation, and run-together prosigns ([R], [AR], [CQ], [SOS]) shown distinctly — with its pattern and timing, added to the timeline, the event log, and the CSV, and flagged when the clustering and decode rate look deliberately coded rather than natural blinking.</li>
         <li><b>Then it's gone.</b> Results live only in this page's memory. Remove the file — or close the tab — and the video and its data are dropped. Nothing is stored or sent anywhere.</li>
       </ol>
     </section>
@@ -399,6 +432,7 @@ footer{margin-top:22px;font-size:13px;color:var(--muted)}
         <tr><td>Lip sync</td><td>In genuine on-camera speech, mouth movement and sound rise and fall together, usually within about 40–100 ms of each other. Repeated stretches where one moves without the other — or a consistent offset well beyond that — are what this layer flags</td></tr>
         <tr><td>Micro-expressions</td><td>Brief involuntary facial movements lasting roughly 40–500 ms occur in natural speech and reaction. There is no "normal count" — what this layer reports is where they land relative to the spoken cadence</td></tr>
         <tr><td>Breathing rate at rest</td><td>About 12–20 breaths per minute for an average adult at rest, in a fairly regular rhythm; talking, exertion, and emotion all move it</td></tr>
+        <tr><td>Morse code in blinks</td><td>No population average applies — this is a decode, not a biometric. Blink timing used: dot under 350 ms, dash 350 ms or more; pauses under 1.1 s join a character, 1.1–2.2 s ends a character, over 2.2 s ends a word; run-together groups decode as prosigns ([R], [AR], [CQ], [SOS]). Patterns are the full International (ITU) Morse set — letters, digits, and punctuation (see the Morse key in the results column)</td></tr>
       </table>
       <p class="small">Ranges are general population averages of the kind published in clinical and university references (e.g., blink-rate literature summarized by Mayo Clinic and Harvard Health). Individuals vary widely — fatigue, medication, contact lenses, camera angle, and frame rate all move these numbers.</p>
     </section>
@@ -407,7 +441,7 @@ footer{margin-top:22px;font-size:13px;color:var(--muted)}
   <section class="disclaimer">
     <h2>⚠ Read this before you use the numbers</h2>
     <p style="margin:6px 0"><b>This tool gives statistics and normal biometrics for the average person — not a guarantee, and not proof.</b> An unusual eye pattern does <b>not</b> prove a video is fake, manipulated, or AI-generated, and a normal-looking pattern does <b>not</b> prove a video is real. Lighting, camera angle, low frame rate, compression, glasses, and the person simply being tired can all produce “unusual” results, and the best manipulated videos may show none.</p>
-    <p style="margin:6px 0">The same caution covers the new checks. A look-away is ordinary human behavior, and an edit or a stutter does <b>not</b> prove manipulation — most published video is legitimately edited, and freezes can come from the original recording, compression, or a struggling device. Micro-expressions are <b>not</b> lie detection — brief facial movements do not prove deception or fakery, and reading emotion from them is scientifically contested. A lip-sync mismatch has everyday causes too — voiceover, dubbing, an off-camera speaker, or a platform re-encode shifting the audio a few frames. Only the overall pattern, weighed with everything else, means anything.</p>
+    <p style="margin:6px 0">The same caution covers the new checks. A look-away is ordinary human behavior, and an edit or a stutter does <b>not</b> prove manipulation — most published video is legitimately edited, and freezes can come from the original recording, compression, or a struggling device. Micro-expressions are <b>not</b> lie detection — brief facial movements do not prove deception or fakery, and reading emotion from them is scientifically contested. A lip-sync mismatch has everyday causes too — voiceover, dubbing, an off-camera speaker, or a platform re-encode shifting the audio a few frames. Only the overall pattern, weighed with everything else, means anything. The Morse decode carries the same caution in the other direction: a blink sequence that <i>can</i> be read as International Morse does not by itself prove anyone intended to send a message — short natural sequences can decode by chance, which is why the coded flag requires a clustered, mostly-valid, multi-letter pattern rather than a single decodable group.</p>
     <p style="margin:6px 0">Use your own best judgment. Treat this as one signal to weigh alongside the source of the video, its context, and other checks — never as a verdict on its own. This is a 24-hour proof of concept, not a forensic tool.</p>
   </section>
 
@@ -1016,13 +1050,110 @@ function counts(){
 }
 function ratePerMin(){ var c=counts(); if(faceSeconds<5) return null; return c.b/(faceSeconds/60); }
 
+/* ---- Morse code in the blinks — full International Morse (ITU) ----
+   Complete set: letters A–Z, digits 0–9, punctuation, and prosigns.
+   Timing used (also shown on the page):
+   closure <350 ms = dot · >=350 ms = dash (International has no separate long dash —
+   a held dash is still a dash).
+   eyes-open gap <1.1 s joins elements inside one character · 1.1–2.2 s ends a
+   character · >2.2 s ends a word.
+   Prosigns are sent run together (no character gap), so they arrive as ONE long
+   group: AR = .-.-. and CQ = -.-.--.- are decoded distinctly as [AR] / [CQ],
+   and a standalone R group (a word by itself) is decoded as the prosign
+   [R] received / roger instead of the letter R inside a word. */
+var MORSE_TIMING={dotMax:0.35, gapJoin:1.10, gapWord:2.20};
+var INTL_MORSE={
+  ".-":"A","-...":"B","-.-.":"C","-..":"D",".":"E","..-.":"F","--.":"G","....":"H","..":"I",".---":"J","-.-":"K",".-..":"L","--":"M","-.":"N","---":"O",".--.":"P","--.-":"Q",".-.":"R","...":"S","-":"T","..-":"U","...-":"V",".--":"W","-..-":"X","-.--":"Y","--..":"Z",
+  ".----":"1","..---":"2","...--":"3","....-":"4",".....":"5","-....":"6","--...":"7","---..":"8","----.":"9","-----":"0",
+  ".-.-.-":".","--..--":",","..--..":"?",".----.":"'","-.-.--":"!","-..-.":"/","-.--.":"(","-.--.-":")",".-...":"&","---...":":","-.-.-.":";","-...-":"=","-....-":"-","..--.-":"_",".-..-.":"\"","...-..-":"$",".--.-.":"@"
+};
+var INTL_PROSIGN_RUN={"-.-.--.-":{token:"[CQ]",name:"CQ — calling any station"},".-.-.":{token:"[AR]",name:"AR — end of message"},"...---...":{token:"[SOS]",name:"SOS — distress"}};
+function morseSym(dur){ return dur<MORSE_TIMING.dotMax?".":"-"; }
+function computeMorse(){
+  var src=events.filter(function(e){ return e.type==="Blink"||e.type==="Prolonged closure"; }).slice().sort(function(a,b){ return a.t-b.t; });
+  var groups=[], cur=null, gaps=[], dots=0, dashes=0, prosigns=0, i;
+  for(i=0;i<src.length;i++){
+    var e=src[i], s=morseSym(e.dur);
+    if(s===".") dots++; else dashes++;
+    if(!cur){ cur={code:s, start:e.t, end:e.t+e.dur, wordAfter:false}; continue; }
+    var prev=src[i-1], gap=e.t-(prev.t+prev.dur); if(gap<0) gap=0; gaps.push(gap);
+    if(gap<MORSE_TIMING.gapJoin){ cur.code+=s; cur.end=e.t+e.dur; }
+    else if(gap<MORSE_TIMING.gapWord){ groups.push(cur); cur={code:s, start:e.t, end:e.t+e.dur, wordAfter:false}; }
+    else { cur.wordAfter=true; groups.push(cur); cur={code:s, start:e.t, end:e.t+e.dur, wordAfter:false}; }
+  }
+  if(cur) groups.push(cur);
+  var valid=0, multi=0, text="", pattern="";
+  groups.forEach(function(g,gi){
+    g.elements=g.code.length;
+    g.prosign=null; g.char=null;
+    var run=INTL_PROSIGN_RUN[g.code];
+    var wordAlone=(gi===0||groups[gi-1].wordAfter) && (g.wordAfter||gi===groups.length-1);
+    if(run){ g.prosign=run.name; g.char=run.token; }
+    else if(g.code===".-." && wordAlone){ g.prosign="R — received / roger"; g.char="[R]"; }
+    else if(INTL_MORSE[g.code]!==undefined){ g.char=INTL_MORSE[g.code]; }
+    if(g.char) valid++;
+    if(g.prosign) prosigns++;
+    if(g.elements>=2) multi++;
+    text+=(g.char||"�"); if(g.wordAfter && gi<groups.length-1) text+=" ";
+    pattern+=g.code; if(gi<groups.length-1) pattern+=(g.wordAfter?"  /  ":"   ");
+  });
+  var rapid=0; gaps.forEach(function(g){ if(g<MORSE_TIMING.gapWord) rapid++; });
+  var rapidShare=gaps.length?rapid/gaps.length:0;
+  var validRatio=groups.length?valid/groups.length:0;
+  var span=groups.length?(groups[groups.length-1].end-groups[0].start):0;
+  var coded=src.length>=8 && groups.length>=3 && validRatio>=0.8 && multi>=2 && rapidShare>=0.6;
+  var words=text.trim()?text.trim().split(/\s+/).length:0;
+  return {src:src, groups:groups, text:text, pattern:pattern, dots:dots, dashes:dashes, prosigns:prosigns,
+    valid:valid, validRatio:validRatio, multi:multi, gaps:gaps, rapidShare:rapidShare, span:span, coded:coded, words:words};
+}
+function morseDisplay(code){ return code.replace(/\./g,"·").replace(/-/g,"–"); }
+function morseSummaryLine(){
+  var m=computeMorse();
+  if(!m.src.length) return "Morse in blinks (International Morse): no blinks to decode";
+  return "Morse in blinks (International Morse): decoded \""+m.text+"\" · Pattern: "+m.pattern+" · Elements: "+m.src.length+" ("+m.dots+" dots, "+m.dashes+" dashes) in "+m.groups.length+" character groups ("+m.valid+" valid, "+m.prosigns+" prosigns) · Timing: dot <350 ms, dash 350 ms+, gaps <1.1 s same character / 1.1-2.2 s character break / >2.2 s word break · Deliberately coded pattern: "+(m.coded?"FLAGGED — clustered, mostly-valid decode, unlike natural blinking":"not flagged — reads as natural blinking");
+}
+function updateMorseReadout(){
+  var pill=$("morsePill"); if(!pill) return;
+  var m=computeMorse();
+  $("sMorseEl").textContent=m.src.length;
+  $("sMorseLetters").textContent=m.groups.length;
+  $("sMorseValid").textContent=m.groups.length?(m.valid+" / "+m.groups.length+" ("+Math.round(m.validRatio*100)+"%)"):"—";
+  $("sMorseWords").textContent=m.words;
+  var box=$("morseFlagBox"), ft=$("morseFlagTitle"), fx=$("morseFlagText");
+  if(!m.src.length){
+    pill.textContent="No blinks yet"; pill.className="statepill";
+    $("morseMsg").textContent="—";
+    $("morsePattern").textContent="No blink sequence yet — the pattern appears here as blinks are counted.";
+    box.className="flag"; ft.textContent="Coded or natural?";
+    fx.textContent="No assessment yet. Natural blinks land seconds apart and decode as isolated single letters (mostly E for a dot, T for a dash). A deliberately blinked message is different: elements come in quick clusters, most groups decode to valid International Morse characters, and multi-element characters appear — that combination is what gets flagged here.";
+    return;
+  }
+  $("morseMsg").textContent=m.text||"—";
+  $("morsePattern").textContent=morseDisplay(m.pattern);
+  if(m.coded){
+    pill.textContent="⚠ Pattern looks deliberately coded"; pill.className="statepill blink";
+    box.className="flag warn"; ft.textContent="⚠ Looks deliberately coded, not natural blinking";
+    fx.textContent=m.src.length+" blink elements grouped into "+m.groups.length+" character groups across "+m.span.toFixed(1)+" s of clustered blinking — "+m.valid+" of "+m.groups.length+" groups ("+Math.round(m.validRatio*100)+"%) decode to valid International Morse characters, "+m.multi+" of them multi-element characters, and "+Math.round(m.rapidShare*100)+"% of the pauses between blinks were under the 2.2 s character gap. Natural blinking is seconds apart and reads as isolated E/T letters; this clustering plus a near-complete decode is the deliberate-coding pattern. Decoded message: “"+m.text+"”. That is a pattern flag, not proof of intent — weigh it with the context.";
+  } else {
+    pill.textContent="Decoded — no coded pattern flagged"; pill.className="statepill";
+    box.className="flag"; ft.textContent="Reads as natural blinking, not a coded message";
+    var why=[];
+    if(m.src.length<8) why.push("only "+m.src.length+" blink element"+(m.src.length===1?"":"s")+" so far (the flag needs at least 8)");
+    if(m.groups.length<3) why.push("only "+m.groups.length+" character group"+(m.groups.length===1?"":"s")+" (needs at least 3)");
+    if(m.groups.length && m.validRatio<0.8) why.push("only "+Math.round(m.validRatio*100)+"% of groups decode to valid International Morse characters (needs 80%+)");
+    if(m.multi<2) why.push("fewer than 2 multi-element characters — the groups are mostly single dots/dashes, which is what ordinary blinks (E/T) produce");
+    if(m.gaps.length && m.rapidShare<0.6) why.push("the pauses between blinks are mostly over the 2.2 s character gap — blinks arriving at a natural, seconds-apart pace rather than in Morse clusters");
+    fx.textContent="The blink stream was decoded anyway (message and pattern above), but it does not meet the deliberate-coding test: "+(why.length?why.join("; "):"the pattern is too short or too broken up to call")+". An ordinary blink sequence decoding to a letter or two by chance is expected — that alone is not flagged.";
+  }
+}
+
 function renderAll(){
   var c=counts();
   $("sBlinks").textContent=c.b; $("sWinks").textContent=c.w; $("sLong").textContent=c.long;
   var r=ratePerMin(); $("sRate").textContent=(r===null?"—":r.toFixed(1));
   $("sAvg").textContent=(c.b?fmtMs(c.avg):"—");
   csvBtn.disabled=copyBtn.disabled=(events.length===0);
-  updateGazeReadout(); updateLipReadout(); updateMicroReadout(); updateBreathReadout(); updateHeadReadout();
+  updateGazeReadout(); updateLipReadout(); updateMicroReadout(); updateBreathReadout(); updateHeadReadout(); updateMorseReadout();
   renderTrack(); renderLog(); renderFlags(); renderVerdict(); drawChart(); drawDiffChart(); drawMouthChart(); drawMicroChart(); drawBreathChart();
 }
 function markClass(type){
@@ -1047,11 +1178,27 @@ function renderTrack(){
     d.addEventListener("click",function(){ video.currentTime=e.t; });
     track.appendChild(d);
   });
+  computeMorse().groups.forEach(function(g){
+    var d=document.createElement("button"); d.className="mark morse";
+    d.style.left=(g.start/video.duration*100)+"%";
+    d.title="Morse (International) — "+(g.prosign?("prosign "+g.prosign):(g.char?("character “"+g.char+"”"):"undecodable group"))+" ["+g.code+"] at "+fmtT(g.start);
+    d.setAttribute("aria-label",d.title);
+    d.addEventListener("click",function(){ video.currentTime=g.start; });
+    track.appendChild(d);
+  });
 }
 function renderLog(){
   if(!events.length){ logBox.innerHTML='<div class="emptylog">No events yet. Events appear here as the video is analyzed — each with its timestamp in the video and how long the eyes stayed closed.</div>'; return; }
-  var rows=events.slice().sort(function(a,b){return a.t-b.t}).map(function(e){
-    return "<tr><td>"+fmtT(e.t)+"</td><td>"+e.type+"</td><td>"+(e.type==="Edit / cut"?"—":fmtMs(e.dur))+"</td></tr>";
+  var m=computeMorse();
+  var all=events.map(function(e){ return {t:e.t, type:e.type, dur:(e.type==="Edit / cut"?null:e.dur)}; });
+  m.groups.forEach(function(g){
+    all.push({t:g.start, type:"Morse (International) — "+(g.prosign?("prosign "+g.prosign):(g.char?("character “"+g.char+"”"):"undecodable group"))+" ["+g.code+"]", dur:(g.end-g.start)});
+  });
+  if(m.groups.length){
+    all.push({t:m.groups[0].start, type:"Morse (International) — decoded message: “"+m.text+"” · pattern: "+m.pattern+" · deliberately coded pattern: "+(m.coded?"FLAGGED":"not flagged"), dur:m.span});
+  }
+  var rows=all.sort(function(a,b){return a.t-b.t}).map(function(e){
+    return "<tr><td>"+fmtT(e.t)+"</td><td>"+e.type+"</td><td>"+(e.dur===null?"—":fmtMs(e.dur))+"</td></tr>";
   }).join("");
   logBox.innerHTML="<table><tr><th>Video time</th><th>Event</th><th>Closed for</th></tr>"+rows+"</table>";
 }
@@ -1071,6 +1218,8 @@ function renderFlags(){
   if(bs.rate!==null && (bs.rate<10||bs.rate>22)) pre.push({w:1,t:"Breathing rate outside the resting range",p:"About "+bs.rate.toFixed(0)+" breaths/min against a typical resting 12–20. Talking raises breathing rate, so weigh this against how much of the clip is speech."});
   if(bs.cv!==null && bs.cv>0.35) pre.push({w:1,t:"Irregular breathing rhythm",p:"Breath-to-breath timing varies by about "+Math.round(bs.cv*100)+"% from breath to breath — an uneven rhythm rather than the regular pattern expected at rest, and one that doesn't settle with the speech."});
   if(c.bPauses>0) pre.push({w:1,t:c.bPauses+" long breathing pause"+(c.bPauses>1?"s":""),p:"Gaps of 7 seconds or more with no detected breath. During long unbroken speech that can be genuine breath control — or a stretch where the breathing layer was replaced or frozen."});
+  var mm=computeMorse();
+  if(mm.coded) pre.push({w:1,t:"Blink pattern decodes as International Morse — “"+mm.text+"”",p:mm.src.length+" blink elements in quick clusters decode to valid International Morse characters in "+Math.round(mm.validRatio*100)+"% of groups ("+mm.valid+" of "+mm.groups.length+"), with "+mm.multi+" multi-element characters and "+Math.round(mm.rapidShare*100)+"% of inter-blink pauses under the 2.2 s character gap. Natural blinks land seconds apart and read as isolated E/T letters — this clustering is the deliberately-coded pattern. Pattern: "+mm.pattern+". A pattern flag, not proof of intent."});
   if(c.postures+c.shoulders>=3) pre.push({w:0,t:"Frequent posture / shoulder shifts ("+(c.postures+c.shoulders)+")",p:"Repeated leaning and shoulder movement through the clip. Shifting around is normal; shifts that cluster at particular statements are the moments worth re-watching."});
   if(c.tilts>0) pre.push({w:0,t:"Head tilts detected ("+c.tilts+")",p:"Sustained tilts past about 7°, each on the timeline with its direction. Tilting is ordinary body language — noted so the moments are easy to find."});
   if(faceSeconds>=20 && r!==null && r<4) out.push({w:1,t:"Very low blink rate",p:"About "+r.toFixed(1)+" blinks/min across "+fmtT(faceSeconds)+" with a face visible — well below the 15–20/min resting average. This can happen with screen-watching footage, but in a clip presented as natural conversation it is worth a closer look."});
@@ -1099,7 +1248,7 @@ function renderFlags(){
 var FLAG_LIMIT=3;
 function verdictData(){
   var c=counts(), r=ratePerMin(), bs=breathStats(), g=longestGap(), rows=[];
-  function add(layer,measured,range,status,label,why){ rows.push({layer:layer,measured:measured,range:range,status:status,label:label,why:why||null}); }
+  function add(layer,measured,range,status,label,why,pillCls){ rows.push({layer:layer,measured:measured,range:range,status:status,label:label,why:why||null,pillCls:pillCls||null}); }
   // --- Scorable layers: a reputable average exists ---
   var brMeas=(r===null?"—":r.toFixed(1)+" /min")+" · "+c.b+" blink"+(c.b===1?"":"s")+" in "+fmtT(faceSeconds)+" with a face visible";
   if(faceSeconds<30||r===null) add("Blink rate",brMeas,"<b>5–20 /min</b> depending on task — 15–20/min at rest, 5–7/min on screen. Source: Mayo Clinic / Harvard Health blink-rate literature (ranges table below). Conversation can push it higher, which is one reason a single outside layer never flags a video on its own.","wait","Not enough data<small>Needs 30 s with a face visible — not counted</small>",null);
@@ -1142,6 +1291,12 @@ function verdictData(){
   add("Head, posture &amp; shoulders",c.tilts+" tilts · "+c.turns+" turns · "+c.postures+" posture shifts · "+c.shoulders+" shoulder movements","<b>No reputable average.</b> No sourced norm was found for head tilts, turns, posture shifts, or shoulder movements per minute, so there is no honest number to compare these counts to.","none","No reputable average<small>Not counted toward the total</small>",null);
   add("Edits / cuts",c.cuts+" edit"+(c.cuts===1?"":"s")+" / cut"+(c.cuts===1?"":"s"),"<b>No universal average.</b> Edited video normally has cuts; 0 is expected only in a clip presented as one unbroken take — and this page cannot know how this clip was presented.","none","No universal average<small>Not counted toward the total</small>",null);
   add("Stutters / freezes",c.stutters+" stutter"+(c.stutters===1?"":"s")+" / freeze"+(c.stutters===1?"":"s"),"<b>No biometrics average applies.</b> Freezes are a recording, compression, or playback artifact — not a body measurement — so there is no average-person range for them.","none","No biometrics average<small>Not counted toward the total</small>",null);
+  var mm2=computeMorse();
+  var morseMeas=mm2.src.length?("Decoded: “"+mm2.text+"” · Pattern: "+mm2.pattern+" · "+mm2.src.length+" elements ("+mm2.dots+" dots · "+mm2.dashes+" dashes) in "+mm2.groups.length+" character groups, "+mm2.valid+" decoding to valid International Morse characters"+(mm2.prosigns?(", including "+mm2.prosigns+" prosign"+(mm2.prosigns===1?"":"s")+" shown distinctly in brackets"):"")):"No blinks recorded yet — nothing to decode";
+  var morseRange="<b>Full International Morse code</b> (ITU set): letters A–Z, digits 0–9, punctuation (. , ? ' ! / ( ) &amp; : ; = − _ \" $ @), and prosigns — run-together groups decode distinctly as [R] received/roger, [AR] end of message, [CQ] calling any station, [SOS] distress. <b>Timing used:</b> dot &lt;350 ms, dash 350 ms+; pauses &lt;1.1 s join a character, 1.1–2.2 s ends a character, &gt;2.2 s ends a word. <b>Flag test:</b> 8+ elements, 3+ character groups, 80%+ decoding to valid characters, 2+ multi-element characters, and 60%+ of pauses under the character gap. This is a pattern decode, not a population average — it is <b>not counted</b> in the anomaly total; a coded pattern is flagged in this row on its own.";
+  if(!mm2.src.length) add("Morse code in the blinks (International)",morseMeas,morseRange,"info","Nothing to decode yet<small>Not counted toward the total</small>",null,"morse");
+  else if(mm2.coded) add("Morse code in the blinks (International)",morseMeas,morseRange,"info","⚠ Deliberately coded pattern flagged<small>Pattern decode — not counted toward the total</small>",null,"morseflag");
+  else add("Morse code in the blinks (International)",morseMeas,morseRange,"info","Decoded — no coded pattern<small>Reads as natural blinking · not counted</small>",null,"morse");
   return rows;
 }
 function renderVerdict(){
@@ -1152,7 +1307,7 @@ function renderVerdict(){
   var scorable=rows.filter(function(r){return r.status==="in"||r.status==="out"}).length;
   var anomalies=outs.length;
   rowsEl.innerHTML=rows.map(function(r){
-    var cls=r.status==="in"?"in":(r.status==="out"?"out":"none");
+    var cls=r.pillCls||(r.status==="in"?"in":(r.status==="out"?"out":"none"));
     return '<div class="vrow"><b class="layer">'+r.layer+'</b><span class="meas">'+r.measured+'</span><span class="range">'+r.range+'</span><span><span class="vpill '+cls+'">'+r.label+'</span></span></div>';
   }).join("");
   banner.className="verdict-banner";
@@ -1199,7 +1354,9 @@ function verdictSummaryLine(){
   else if(outs.length===0) head+=" — NOT FLAGGED (no layer outside the average)";
   else head+=" — NOT FLAGGED (a few anomalies are normal; below the limit)";
   var details=outs.length?(" Outside: "+outs.map(function(r){return r.layer;}).join("; ")+"."):"";
-  return head+details+" Layers with no reputable average (micro-expressions, gaze, winks, head/posture, edits, stutters) were not counted.";
+  var mm3=computeMorse();
+  var morseBit=mm3.src.length?(" Morse in blinks (International): decoded “"+mm3.text+"” · pattern "+mm3.pattern+" · deliberately coded pattern: "+(mm3.coded?"FLAGGED":"not flagged")+"."):" Morse in blinks (International): no blinks to decode.";
+  return head+details+" Layers with no reputable average (micro-expressions, gaze, winks, head/posture, edits, stutters) were not counted."+morseBit;
 }
 function drawChart(){
   var cv=$("earChart"), ctx=cv.getContext("2d");
@@ -1233,6 +1390,7 @@ function summaryText(){
   "Head tilts: "+c.tilts+" · Head turns: "+c.turns+" · Posture shifts: "+c.postures+" · Shoulder movements: "+c.shoulders+"\n"+
   "Blinks: "+c.b+" · Winks: "+c.w+" · Prolonged closures: "+c.long+"\n"+
   "Blink rate: "+(r===null?"n/a":r.toFixed(1)+" /min")+" · Avg blink: "+(c.b?fmtMs(c.avg):"n/a")+"\n"+
+  morseSummaryLine()+"\n"+
   "Look-aways (gaze breaks): "+c.gaze+" · Time on camera: "+(tot>3?Math.round(gazeOnSec/tot*100)+"%":"n/a")+" · Longest look-away: "+(c.gaze?fmtDur(c.gazeLong):"n/a")+"\n"+
   "Edits / cuts: "+c.cuts+" · Stutters / freezes: "+c.stutters+"\n"+
   "Lip-sync mismatches: "+c.lip+" (sound with mouth still: "+c.lipA+" · mouth moving with no sound: "+c.lipB+") · Est. audio offset: "+(estOffset===null?"n/a":estOffset+" ms")+"\n"+
@@ -1246,7 +1404,16 @@ copyBtn.addEventListener("click",function(){
   else { copyNote.textContent="Copy isn't available in this browser — use the CSV download instead."; }
 });
 csvBtn.addEventListener("click",function(){
-  var csv="video_time_seconds,event,closed_seconds\n"+events.map(function(e){ return e.t.toFixed(2)+',"'+e.type+'",'+e.dur.toFixed(3); }).join("\n");
+  var m=computeMorse();
+  var all=events.map(function(e){ return {t:e.t, type:e.type, dur:e.dur}; });
+  m.groups.forEach(function(g){
+    all.push({t:g.start, type:"Morse (International) - "+(g.prosign?("prosign "+g.prosign):(g.char?("character "+g.char):"undecodable group"))+" ["+g.code+"]", dur:(g.end-g.start)});
+  });
+  if(m.groups.length){
+    all.push({t:m.groups[0].start, type:"Morse (International) - decoded message: "+m.text+" | pattern: "+m.pattern+" | timing: dot <350 ms, dash 350 ms+, gaps <1.1 s same character / 1.1-2.2 s character break / >2.2 s word break | prosigns decoded distinctly in brackets | deliberately coded pattern: "+(m.coded?"FLAGGED":"not flagged"), dur:m.span});
+  }
+  all.sort(function(a,b){ return a.t-b.t; });
+  var csv="video_time_seconds,event,closed_seconds\n"+all.map(function(e){ return e.t.toFixed(2)+',"'+e.type+'",'+e.dur.toFixed(3); }).join("\n");
   var blob=new Blob([csv],{type:"text/csv"}); var a=document.createElement("a");
   a.href=URL.createObjectURL(blob); a.download="eye-pattern-events.csv"; a.click();
   setTimeout(function(){ URL.revokeObjectURL(a.href); },2000);
