@@ -734,6 +734,22 @@ footer{border-top:1px solid var(--line)}
 
 <script>
 var WORKER_URL = "https://echo-chat-llama-proxy.evan996.workers.dev/v1/chat/completions";
+var COUNT_URL = "https://echo-chat-llama-proxy.evan996.workers.dev/v1/chat/count";
+/* Server-side count check (F1 staging): ask the Worker how many chats the
+   visitor bucket has left before sending. Returns null when the check
+   fails or the Worker does not answer -- the caller then falls back to
+   the localStorage limit below. localStorage is display-only; it never
+   decides on its own anymore. Verified 2026-11-24: the Worker counts Monty /completions POSTs in the
+   same visitor bucket (reserveChat), so this pre-check reads the enforced limit. */ 
+async function serverRemaining(){
+  try {
+    var res = await fetch(COUNT_URL, { method: "GET" });
+    if (!res.ok) return null;
+    var data = await res.json();
+    if (data && typeof data.remaining === "number") return data.remaining;
+    return null;
+  } catch (e) { return null; }
+}
 var MODEL = "meta-llama/Llama-4-Scout-17B-16E-Instruct";
 var SYSTEM_PROMPT = "You are Monty Mantis, a helpful assistant in a small text chat bubble on a photography website, powered by Meta's Llama model. Answer clearly and concisely in text only. You cannot see or receive pictures in this chat, so do not ask for one. If asked about the site's prints, the sizes are 8x10 $119.05, 11x14 $178.94, 16x20 $322.61, museum-grade giclée on Hahnemühle paper, shipping included.";
 var LIMIT = 10;
@@ -778,6 +794,8 @@ document.getElementById("tt-form").addEventListener("submit", async function(e){
   var text = inputEl.value.trim();
   if (!text || inputEl.disabled) return;
   if (enforceLimit()) return;
+  var rem = await serverRemaining();
+  if (rem !== null && rem <= 0) { addMsg("You've reached your daily limit.", "tt-sys"); refreshCount(); return; }
   inputEl.value = "";
   addMsg(text, "tt-out");
   chatHistory.push({role: "user", content: text});
@@ -787,6 +805,7 @@ document.getElementById("tt-form").addEventListener("submit", async function(e){
   try {
     var payload = { model: MODEL, messages: [{role: "system", content: SYSTEM_PROMPT}].concat(chatHistory.slice(-10)), temperature: 0.7, max_tokens: 1024 };
     var res = await fetch(WORKER_URL, { method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify(payload) });
+    if (res.status === 429) { thinking.remove(); addMsg("You've reached your daily limit.", "tt-sys"); refreshCount(); return; }
     if (!res.ok) throw new Error("http" + res.status);
     var data = await res.json();
     var msg = data && data.choices && data.choices[0] && data.choices[0].message;
