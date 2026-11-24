@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://www.gstatic.com https://cdn.jsdelivr.net https://esm.sh; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data: blob:; connect-src 'self' https://echo-chat-llama-proxy.evan996.workers.dev https://www.gstatic.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://cdn.jsdelivr.net https://esm.sh https://ampixa.github.io https://huggingface.co; media-src 'self' blob: data:; object-src 'none'; base-uri 'self'; form-action 'self';">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="color-scheme" content="light dark">
 <link rel="icon" href="data:,">
@@ -496,7 +497,7 @@ function playAudioBlob(blob, run, chunkText, chunkIndex, chunkTotal) {
    First tap downloads the WASM runtime + hfc voice once, then caches. */
 const SANO_VOICE = "hfc";
 const SANO_LENGTH_SCALE = 1.50;
-const SANO_SOURCES = ["https://cdn.jsdelivr.net/npm/sanotts-web@latest/+esm", "https://esm.sh/sanotts-web@latest"];
+const SANO_SOURCES = ["https://cdn.jsdelivr.net/npm/sanotts-web@0.3.0/+esm", "https://esm.sh/sanotts-web@0.3.0"];
 let sanoPromise = null, sanoTts = null;
 function loadVoiceEngine() {
   if (sanoTts) return Promise.resolve(sanoTts);

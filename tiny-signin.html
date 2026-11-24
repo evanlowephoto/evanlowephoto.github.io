@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://www.gstatic.com; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data:; connect-src 'self' https://www.gstatic.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com; object-src 'none'; base-uri 'self'; form-action 'self';">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Tiny Tim — Sign in</title>
 <style>
@@ -100,6 +101,17 @@ var isSignUp = false;
 var auth = null;
 var provider = null;
 
+function friendlyAuthError(e, signingUp) {
+  var code = (e && e.code) || "";
+  if (code === "auth/too-many-requests") return "Too many attempts. Please wait a little while and try again.";
+  if (code === "auth/invalid-email") return "That email address doesn't look right. Check it and try again.";
+  if (code === "auth/weak-password") return "Password must be at least 12 characters, with an uppercase letter, a lowercase letter, a number, and a special character.";
+  if (code === "auth/network-request-failed") return "Network problem. Check your connection and try again.";
+  if (code === "auth/popup-closed-by-user" || code === "auth/cancelled-popup-request") return "Google sign-in was closed before it finished. Try again when you're ready.";
+  // Deliberately no distinction between unknown email / wrong password /
+  // existing account: the exact reason must not leak whether an account exists.
+  return signingUp ? "Couldn't create the account. Please try again." : "Sign-in failed. Check your email and password and try again.";
+}
 function showError(text) {
   successMsg.classList.remove("show");
   errorMsg.textContent = text;
@@ -130,7 +142,7 @@ if (!isPlaceholder) {
       }
     });
   } catch (e) {
-    showError("Firebase could not start: " + e.message);
+    showError("Sign-in is unavailable right now. Please try again in a moment.");
   }
 }
 
@@ -162,7 +174,7 @@ document.getElementById("authForm").addEventListener("submit", function (ev) {
   action.then(function (cred) {
     showSuccess("Signed in as " + cred.user.email + ".");
   }).catch(function (e) {
-    showError(e.message || "Sign-in failed. Please try again.");
+    showError(friendlyAuthError(e, isSignUp));
   });
 });
 
@@ -171,9 +183,9 @@ document.getElementById("forgotBtn").addEventListener("click", function () {
   var email = document.getElementById("email").value.trim();
   if (!email) { showError("Enter your email above, then tap Forgot password."); return; }
   sendPasswordResetEmail(auth, email).then(function () {
-    showSuccess("Password reset email sent to " + email + ". Check your inbox, then follow the link to set a new password.");
+    showSuccess("If an account exists for this email, a password reset link was sent. Check your inbox, then follow the link to set a new password.");
   }).catch(function (e) {
-    showError(e.message || "Could not send a reset email. Please try again.");
+    showSuccess("If an account exists for this email, a password reset link was sent. Check your inbox, then follow the link to set a new password.");
   });
 });
 
@@ -182,7 +194,7 @@ document.getElementById("googleBtn").addEventListener("click", function () {
   signInWithPopup(auth, provider).then(function (cred) {
     showSuccess("Signed in as " + cred.user.email + ".");
   }).catch(function (e) {
-    showError(e.message || "Google sign-in failed. Please try again.");
+    showError("Google sign-in failed. Please try again.");
   });
 });
 
@@ -192,7 +204,7 @@ document.getElementById("continueBtn").addEventListener("click", function () {
 
 document.getElementById("signOutBtn").addEventListener("click", function () {
   if (!auth) { return; }
-  signOut(auth).catch(function (e) { showError(e.message || "Sign-out failed."); });
+  signOut(auth).catch(function (e) { showError("Sign-out failed. Please try again."); });
 });
 </script>
 </body>
