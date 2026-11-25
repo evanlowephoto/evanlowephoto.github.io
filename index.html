@@ -37,7 +37,7 @@
 }
 </style>
   <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self' https://echo-chat-llama-proxy.evan996.workers.dev https://erl-print-orders.evan996.workers.dev; object-src 'none'; base-uri 'self'; form-action 'self';">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self' https://echo-chat-llama-proxy.evan996.workers.dev https://erl-print-orders.evan996.workers.dev https://erl-visitor-counter.evan996.workers.dev; object-src 'none'; base-uri 'self'; form-action 'self';">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="color-scheme" content="light dark">
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
@@ -204,6 +204,10 @@ footer{border-top:1px solid var(--line)}
     .follow span{display:block;color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.14em}.follow strong{font:500 clamp(27px,4vw,46px)/1.2 var(--serif)}
     .copyright{margin:0;color:var(--muted);font-size:12px;text-align:right}
     .cofounders{margin:0;color:var(--muted);font-size:12px}
+    /* Visitor counter (staging, 2026-11-25): hidden until the count loads,
+       so a down or blocked endpoint shows nothing, never an error. */
+    .visitor-count{margin:0;color:var(--muted);font-size:12px;text-align:right}
+    .visitor-count strong{color:var(--gold);font-weight:600}
     @media(max-width:760px){
       .nav{padding:20px}.navlinks{gap:16px}.navlinks a:nth-child(2){display:none}
       .hero{min-height:88svh}.hero>img{object-position:center center}.hero>.photo-watermark{top:58%;right:20px;bottom:auto}.hero-copy{padding-bottom:46px}h1{font-size:clamp(42px,13vw,66px)}
@@ -224,6 +228,14 @@ footer{border-top:1px solid var(--line)}
     .print-buy-btn.is-soon{border-color:#5a5f56;color:#8a8f85;cursor:not-allowed;letter-spacing:.06em}
     .print-buy-btn.is-soon:hover,.print-buy-btn.is-soon:focus-visible{background:transparent;color:#8a8f85}
     .gallery-slide .print-buy-btn{flex:0 0 auto;margin-top:12px}
+    .august-gallery .gallery-slide{display:flex;flex-direction:column}
+    .august-gallery .gallery-slide img{flex:1 1 auto;min-height:0;height:auto}
+    .august-gallery .gallery-slide .photo-watermark{top:14px;bottom:auto}
+    .august-gallery .gallery-slide .caption{position:static;max-width:none;margin:0;padding:0;background:transparent;color:#f2f0ea;font:500 clamp(18px,2.2vw,24px)/1.25 var(--serif);letter-spacing:-.01em}
+    .august-intro{max-width:640px;margin:0 0 28px;color:#b9bdb5;font-size:15px;line-height:1.65}
+    .august-buy{flex:0 0 auto;display:grid;gap:10px;padding:16px 18px 18px;background:#050705}
+    .august-buy-row{display:flex;flex-wrap:wrap;gap:8px}
+    .august-buy-row .buy-btn{padding:8px 16px;font-size:11px}
     .recent-fungi-photo .print-buy-btn,.elite .print-buy-btn{margin-top:10px}
     .print-picker{position:fixed;inset:0;z-index:2000;display:flex;align-items:center;justify-content:center;padding:20px;background:rgba(0,0,0,.72)}
     .print-picker[hidden]{display:none}
@@ -664,6 +676,34 @@ footer{border-top:1px solid var(--line)}
         </div>
       </div>
     </section>
+
+    <section class="gallery-wrap august-gallery" aria-labelledby="august-gallery-title" style="--gallery-count:10">
+      <div class="section">
+        <div class="section-head"><div><p class="section-label">August 2026 · $20 profit prints</p><h2 id="august-gallery-title">August — $20 Profit Prints</h2></div><span class="section-count">Ten photographs</span></div>
+        <p class="august-intro">Ten August photographs that weren't on the site before, priced so I make $20 profit on every print — 8 × 10 $46.96, 11 × 14 $55.36, 16 × 20 $96.04. Anyone can own one.</p>
+        <div class="gallery-frame">
+          <div class="gallery-viewport" id="august-gallery-viewport" tabindex="0" aria-label="August $20 profit prints photography carousel">
+            <figure class="gallery-slide"><img loading="lazy" src="18077495396404100.jpg" alt="Cicada close-up, compound eye in sharp focus against green bokeh"><span class="photo-watermark" aria-hidden="true"><strong>© Evan Lowe</strong><small>@evantoocool99</small></span><div class="august-buy"><p class="caption">Cicada close-up</p><div class="august-buy-row"><a class="buy-btn" href="https://buy.stripe.com/4gM6oAfsO6t7eBm6rb1Jm04">Buy 8 × 10 — $46.96</a><a class="buy-btn" href="https://buy.stripe.com/bJe3coeoKcRvfFq4j31Jm05">Buy 11 × 14 — $55.36</a><a class="buy-btn" href="https://buy.stripe.com/eVq14g4Oa4kZgJu5n71Jm06">Buy 16 × 20 — $96.04</a></div></div></figure>
+            <figure class="gallery-slide"><img loading="lazy" src="18017183963923637.jpg" alt="Purple ironweed in sharp focus beside a soft stream and bridge"><span class="photo-watermark" aria-hidden="true"><strong>© Evan Lowe</strong><small>@evantoocool99</small></span><div class="august-buy"><p class="caption">Purple ironweed by the stream</p><div class="august-buy-row"><a class="buy-btn" href="https://buy.stripe.com/4gM6oAfsO6t7eBm6rb1Jm04">Buy 8 × 10 — $46.96</a><a class="buy-btn" href="https://buy.stripe.com/bJe3coeoKcRvfFq4j31Jm05">Buy 11 × 14 — $55.36</a><a class="buy-btn" href="https://buy.stripe.com/eVq14g4Oa4kZgJu5n71Jm06">Buy 16 × 20 — $96.04</a></div></div></figure>
+            <figure class="gallery-slide"><img loading="lazy" src="18100027586574637.jpg" alt="White mushroom gills from a low angle, forest bokeh behind"><span class="photo-watermark" aria-hidden="true"><strong>© Evan Lowe</strong><small>@evantoocool99</small></span><div class="august-buy"><p class="caption">White mushroom gills</p><div class="august-buy-row"><a class="buy-btn" href="https://buy.stripe.com/4gM6oAfsO6t7eBm6rb1Jm04">Buy 8 × 10 — $46.96</a><a class="buy-btn" href="https://buy.stripe.com/bJe3coeoKcRvfFq4j31Jm05">Buy 11 × 14 — $55.36</a><a class="buy-btn" href="https://buy.stripe.com/eVq14g4Oa4kZgJu5n71Jm06">Buy 16 × 20 — $96.04</a></div></div></figure>
+            <figure class="gallery-slide"><img loading="lazy" src="17883836127684143.jpg" alt="Dense turkey tails rosette filling the frame"><span class="photo-watermark" aria-hidden="true"><strong>© Evan Lowe</strong><small>@evantoocool99</small></span><div class="august-buy"><p class="caption">Turkey tails</p><div class="august-buy-row"><a class="buy-btn" href="https://buy.stripe.com/4gM6oAfsO6t7eBm6rb1Jm04">Buy 8 × 10 — $46.96</a><a class="buy-btn" href="https://buy.stripe.com/bJe3coeoKcRvfFq4j31Jm05">Buy 11 × 14 — $55.36</a><a class="buy-btn" href="https://buy.stripe.com/eVq14g4Oa4kZgJu5n71Jm06">Buy 16 × 20 — $96.04</a></div></div></figure>
+            <figure class="gallery-slide"><img loading="lazy" src="18115466285071249.jpg" alt="White coneflower center, gold-to-green geometric pattern"><span class="photo-watermark" aria-hidden="true"><strong>© Evan Lowe</strong><small>@evantoocool99</small></span><div class="august-buy"><p class="caption">White coneflower center</p><div class="august-buy-row"><a class="buy-btn" href="https://buy.stripe.com/4gM6oAfsO6t7eBm6rb1Jm04">Buy 8 × 10 — $46.96</a><a class="buy-btn" href="https://buy.stripe.com/bJe3coeoKcRvfFq4j31Jm05">Buy 11 × 14 — $55.36</a><a class="buy-btn" href="https://buy.stripe.com/eVq14g4Oa4kZgJu5n71Jm06">Buy 16 × 20 — $96.04</a></div></div></figure>
+            <figure class="gallery-slide"><img loading="lazy" src="18113396080964687.jpg" alt="Orange coneflower center, fiery orange with pollen"><span class="photo-watermark" aria-hidden="true"><strong>© Evan Lowe</strong><small>@evantoocool99</small></span><div class="august-buy"><p class="caption">Orange coneflower center</p><div class="august-buy-row"><a class="buy-btn" href="https://buy.stripe.com/4gM6oAfsO6t7eBm6rb1Jm04">Buy 8 × 10 — $46.96</a><a class="buy-btn" href="https://buy.stripe.com/bJe3coeoKcRvfFq4j31Jm05">Buy 11 × 14 — $55.36</a><a class="buy-btn" href="https://buy.stripe.com/eVq14g4Oa4kZgJu5n71Jm06">Buy 16 × 20 — $96.04</a></div></div></figure>
+            <figure class="gallery-slide"><img loading="lazy" src="17883500031618467.jpg" alt="Honeybee macro on goldenrod, wing and eye detail"><span class="photo-watermark" aria-hidden="true"><strong>© Evan Lowe</strong><small>@evantoocool99</small></span><div class="august-buy"><p class="caption">Honeybee macro</p><div class="august-buy-row"><a class="buy-btn" href="https://buy.stripe.com/4gM6oAfsO6t7eBm6rb1Jm04">Buy 8 × 10 — $46.96</a><a class="buy-btn" href="https://buy.stripe.com/bJe3coeoKcRvfFq4j31Jm05">Buy 11 × 14 — $55.36</a><a class="buy-btn" href="https://buy.stripe.com/eVq14g4Oa4kZgJu5n71Jm06">Buy 16 × 20 — $96.04</a></div></div></figure>
+            <figure class="gallery-slide"><img loading="lazy" src="18126293095703141.jpg" alt="Wheel bug, spiky assassin bug on yellow petals"><span class="photo-watermark" aria-hidden="true"><strong>© Evan Lowe</strong><small>@evantoocool99</small></span><div class="august-buy"><p class="caption">Wheel bug</p><div class="august-buy-row"><a class="buy-btn" href="https://buy.stripe.com/4gM6oAfsO6t7eBm6rb1Jm04">Buy 8 × 10 — $46.96</a><a class="buy-btn" href="https://buy.stripe.com/bJe3coeoKcRvfFq4j31Jm05">Buy 11 × 14 — $55.36</a><a class="buy-btn" href="https://buy.stripe.com/eVq14g4Oa4kZgJu5n71Jm06">Buy 16 × 20 — $96.04</a></div></div></figure>
+            <figure class="gallery-slide"><img loading="lazy" src="17864400207658458.jpg" alt="Blue bottle fly face-on, red compound eyes and metallic green thorax"><span class="photo-watermark" aria-hidden="true"><strong>© Evan Lowe</strong><small>@evantoocool99</small></span><div class="august-buy"><p class="caption">Blue bottle fly, face-on</p><div class="august-buy-row"><a class="buy-btn" href="https://buy.stripe.com/4gM6oAfsO6t7eBm6rb1Jm04">Buy 8 × 10 — $46.96</a><a class="buy-btn" href="https://buy.stripe.com/bJe3coeoKcRvfFq4j31Jm05">Buy 11 × 14 — $55.36</a><a class="buy-btn" href="https://buy.stripe.com/eVq14g4Oa4kZgJu5n71Jm06">Buy 16 × 20 — $96.04</a></div></div></figure>
+            <figure class="gallery-slide"><img loading="lazy" src="18135564838620864.jpg" alt="Micrathena spider, spiky black-and-white, hanging from a twig"><span class="photo-watermark" aria-hidden="true"><strong>© Evan Lowe</strong><small>@evantoocool99</small></span><div class="august-buy"><p class="caption">Micrathena spider</p><div class="august-buy-row"><a class="buy-btn" href="https://buy.stripe.com/4gM6oAfsO6t7eBm6rb1Jm04">Buy 8 × 10 — $46.96</a><a class="buy-btn" href="https://buy.stripe.com/bJe3coeoKcRvfFq4j31Jm05">Buy 11 × 14 — $55.36</a><a class="buy-btn" href="https://buy.stripe.com/eVq14g4Oa4kZgJu5n71Jm06">Buy 16 × 20 — $96.04</a></div></div></figure>
+          </div>
+          <button class="gallery-arrow gallery-prev" type="button" aria-label="Previous photograph"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 5-7 7 7 7"/></svg></button>
+          <button class="gallery-arrow gallery-next" type="button" aria-label="Next photograph"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 7 7-7 7"/></svg></button>
+        </div>
+        <div class="gallery-controls">
+          <span class="gallery-status" aria-live="polite">01 / 10</span>
+          <div class="gallery-progress" aria-hidden="true"><span></span></div>
+          <span class="gallery-hint">Swipe or use arrows</span>
+        </div>
+      </div>
+    </section>
   </main>
 
   <footer id="contact">
@@ -681,6 +721,7 @@ footer{border-top:1px solid var(--line)}
       <div class="follow"><span>Follow on Instagram</span><a class="insta-handle" href="https://www.instagram.com/evantoocool99" target="_blank" rel="noopener"><strong>@evantoocool99</strong></a></div>
       <p class="cofounders">Shout-out to my co-founders, Alexa Plus and Muse.</p>
       <p class="copyright">&copy; 2026 Evan Lowe</p>
+      <p class="visitor-count" id="visitorCount" hidden><strong id="visitorCountNum"></strong> visits</p>
     </div>
   </div>
 </footer>
@@ -982,6 +1023,32 @@ document.getElementById("tt-form").addEventListener("submit", async function(e){
           if (btn && !btn.disabled) openPicker(btn.getAttribute("data-photo"));
         }
       });
+    })();
+  </script>
+  <script>
+    /* Visitor counter (staging, 2026-11-25). One count per browser tab
+       session: sessionStorage remembers this tab already counted, so a
+       refresh does not add another visit. A new tab counts again. This
+       counts VISITS, not unique visitors — it cannot prove uniqueness.
+       If the counter endpoint is down or blocked, nothing shows at all:
+       no number, no error, the page is unchanged. Worker:
+       erl-visitor-counter (erl-visitor-counter.js, D1, count only). */
+    (function(){
+      var COUNTER_URL = "https://erl-visitor-counter.evan996.workers.dev";
+      var el = document.getElementById("visitorCount");
+      var num = document.getElementById("visitorCountNum");
+      if (!el || !num) return;
+      var counted = false;
+      try { counted = sessionStorage.getItem("erl-visit-counted") === "1"; } catch (e) { counted = false; }
+      fetch(COUNTER_URL + (counted ? "/count" : "/visit"), {method: counted ? "GET" : "POST"})
+        .then(function(res){ if (!res.ok) throw new Error("bad status " + res.status); return res.json(); })
+        .then(function(d){
+          if (typeof d.visits !== "number") return;
+          num.textContent = d.visits.toLocaleString("en-US");
+          el.hidden = false;
+          if (!counted) { try { sessionStorage.setItem("erl-visit-counted", "1"); } catch (e) {} }
+        })
+        .catch(function(){ /* counter unreachable: show nothing */ });
     })();
   </script>
 </body>
